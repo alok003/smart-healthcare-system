@@ -1,7 +1,7 @@
 package com.project.userService.Service;
 
 import com.project.userService.Entity.User;
-import com.project.userService.Exceptions.NotFoundException;
+import com.project.userService.Exceptions.UserNotFoundException;
 import com.project.userService.Model.UserModel;
 import com.project.userService.Repository.UserRepository;
 import com.project.userService.Utility.UtilityFunction;
@@ -19,15 +19,15 @@ public class UserService {
     private PasswordEncoder passwordEncoder;
     private UtilityFunction utilityFunction;
 
-    public UserModel findById(String userId) {
+    public UserModel findById(String userId) throws UserNotFoundException {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User Not Found"));
+                .orElseThrow(UserNotFoundException::new);
         return utilityFunction.cnvEntityToBean(user);
     }
 
-    public UserModel findByEmailId(String emailId) {
+    public UserModel findByEmailId(String emailId) throws UserNotFoundException {
         User user = userRepository.findByUserEmail(emailId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(UserNotFoundException::new);
         return utilityFunction.cnvEntityToBean(user);
     }
 
@@ -39,7 +39,7 @@ public class UserService {
         return userRepository.existsByUserEmail(emailId);
     }
 
-    public UserModel updateByEmail(@Valid UserModel userModel, String email) throws NotFoundException {
+    public UserModel updateByEmail(@Valid UserModel userModel, String email) throws UserNotFoundException {
         if (userRepository.existsByUserEmail(email)) {
             User user = userRepository.findByUserEmail(userModel.getUserEmail()).get();
             user.setUserName(userModel.getUserName());
@@ -47,6 +47,6 @@ public class UserService {
             user.setUserAge(userModel.getUserAge());
             User save = userRepository.save(user);
             return utilityFunction.cnvEntityToBean(save);
-        } else throw new NotFoundException();
+        } else throw new UserNotFoundException();
     }
 }

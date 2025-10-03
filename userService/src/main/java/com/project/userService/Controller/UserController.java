@@ -1,6 +1,6 @@
 package com.project.userService.Controller;
 
-import com.project.userService.Exceptions.NotFoundException;
+import com.project.userService.Exceptions.UserNotFoundException;
 import com.project.userService.Exceptions.UnAuthorizedException;
 import com.project.userService.Model.UserModel;
 import com.project.userService.Service.UserService;
@@ -20,13 +20,13 @@ public class UserController {
     private UtilityFunction utilityFunction;
 
     @GetMapping("/getUserId/{userId}")
-    public ResponseEntity<UserModel> getExistingUserById(@PathVariable String userId, @RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException {
+    public ResponseEntity<UserModel> getExistingUserById(@PathVariable String userId, @RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException, UserNotFoundException {
         if (!utilityFunction.validateRequestAdmin(email, role)) throw new UnAuthorizedException();
         return ResponseEntity.ok(userService.findById(userId));
     }
 
     @GetMapping("/getEmailId/{emailId}")
-    public ResponseEntity<UserModel> getExistingUserByEmailId(@PathVariable String emailId, @RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException {
+    public ResponseEntity<UserModel> getExistingUserByEmailId(@PathVariable String emailId, @RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException, UserNotFoundException {
         if (!utilityFunction.validateRequestAdmin(email, role)) throw new UnAuthorizedException();
         return ResponseEntity.ok(userService.findByEmailId(emailId));
     }
@@ -44,7 +44,7 @@ public class UserController {
     }
 
     @PostMapping("/updateUser")
-    public ResponseEntity<UserModel> updateById(@Valid @RequestBody UserModel userModel, @RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException, NotFoundException {
+    public ResponseEntity<UserModel> updateById(@Valid @RequestBody UserModel userModel, @RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException, UserNotFoundException {
         if (!utilityFunction.validateRequestUser(email, role)) throw new UnAuthorizedException();
         return ResponseEntity.ok(userService.updateByEmail(userModel, email));
     }

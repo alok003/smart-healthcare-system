@@ -1,7 +1,6 @@
 package com.project.userService.Utility;
 
 import com.project.userService.Entity.User;
-import com.project.userService.Exceptions.NotFoundException;
 import com.project.userService.Model.UserModel;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;

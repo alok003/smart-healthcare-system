@@ -13,18 +13,18 @@ import java.time.LocalDateTime;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    String userId ;
-    @Column(unique = true,nullable = false)
+    String userId;
+    @Column(unique = true, nullable = false)
     private String userEmail;
     @Column(nullable = false)
     private String userPassword;
-    private String UserName;
+    private String userName;
     private int userAge;
     @Enumerated(EnumType.STRING)
-    private UserRole userRole=UserRole.USER;
+    private UserRole userRole = UserRole.USER;
     @CreationTimestamp
     private LocalDateTime createdAt;
     @UpdateTimestamp
-    private LocalDateTime UpdatedAt;
+    private LocalDateTime updatedAt;
 
 }

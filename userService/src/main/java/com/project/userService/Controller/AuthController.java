@@ -1,6 +1,7 @@
 package com.project.userService.Controller;
 
 import com.project.userService.Exceptions.UserAlreadyExistsException;
+import com.project.userService.Exceptions.UserNotFoundException;
 import com.project.userService.Model.AuthResponse;
 import com.project.userService.Model.LoginRequest;
 import com.project.userService.Model.UserModel;
@@ -24,7 +25,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> createNewUser(@Valid @RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<AuthResponse> createNewUser(@Valid @RequestBody LoginRequest loginRequest) throws UserNotFoundException {
         return ResponseEntity.ok(authService.login(loginRequest));
     }
 

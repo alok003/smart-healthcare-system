@@ -2,6 +2,7 @@ package com.project.userService.Service;
 
 import com.project.userService.Entity.User;
 import com.project.userService.Exceptions.UserAlreadyExistsException;
+import com.project.userService.Exceptions.UserNotFoundException;
 import com.project.userService.Model.AuthResponse;
 import com.project.userService.Model.LoginRequest;
 import com.project.userService.Model.UserModel;
@@ -26,11 +27,11 @@ public class AuthService {
     private final JWTUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
 
-    public AuthResponse login(LoginRequest request) {
+    public AuthResponse login(LoginRequest request) throws UserNotFoundException {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken
                 (request.getUserEmail(), request.getUserPassword()));
         User user = userRepository.findByUserEmail(request.getUserEmail())
-                .orElseThrow(() -> new UsernameNotFoundException("User Not Found!!!"));
+                .orElseThrow(UserNotFoundException::new);
         String token = jwtUtil.generateToken(user.getUserEmail(), user.getUserRole().name());
         return AuthResponse.builder().token(token).expiration(jwtUtil.extractExpiration(token)).build();
     }

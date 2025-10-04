@@ -19,4 +19,6 @@ public class UserModel {
     @Min(value = 10,message = "Age must be greater than 10")
     @Max(value = 100,message = "Age must be smaller than 100")
     private int userAge;
+    @NotNull(message = "Patient flag cannot be null")
+    private Boolean isPatient;
 }

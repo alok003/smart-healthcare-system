@@ -1,6 +1,7 @@
 package com.project.userService.Service;
 
 import com.project.userService.Entity.User;
+import com.project.userService.Entity.UserRole;
 import com.project.userService.Exceptions.UserAlreadyExistsException;
 import com.project.userService.Exceptions.UserNotFoundException;
 import com.project.userService.Model.AuthResponse;
@@ -12,7 +13,6 @@ import com.project.userService.Utility.UtilityFunction;
 import lombok.AllArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -42,6 +42,7 @@ public class AuthService {
         }
         User user = utilityFunction.cnvBeanToEntity(userModel);
         user.setUserPassword(passwordEncoder.encode(user.getUserPassword()));
+        if(userModel.getIsPatient())user.setUserRole(UserRole.PATIENT);
         User save = userRepository.save(user);
         return utilityFunction.cnvEntityToBean(save);
     }

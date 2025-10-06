@@ -2,7 +2,7 @@ server:
   port: 8888
 spring:
   application:
-    name: configServer
+    name: config-server
   profiles:
     active: native
   cloud:

@@ -2,6 +2,7 @@ package com.project.userService.Controller;
 
 import com.project.userService.Exceptions.UserNotFoundException;
 import com.project.userService.Exceptions.UnAuthorizedException;
+import com.project.userService.Model.RequestRoleDto;
 import com.project.userService.Model.UserModel;
 import com.project.userService.Service.UserService;
 import com.project.userService.Utility.UtilityFunction;
@@ -47,6 +48,18 @@ public class UserController {
     public ResponseEntity<UserModel> updateById(@Valid @RequestBody UserModel userModel, @RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException, UserNotFoundException {
         if (!utilityFunction.validateRequestUser(email, role)) throw new UnAuthorizedException();
         return ResponseEntity.ok(userService.updateByEmail(userModel, email));
+    }
+
+    @PostMapping("/requestAdminAccess")
+    public ResponseEntity<RequestRoleDto> requestAdminAccess(@Valid @RequestBody RequestRoleDto requestRoleDto,@RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException {
+        if (!utilityFunction.validateRequestUser(email, role)) throw new UnAuthorizedException();
+        return ResponseEntity.ok(userService.requestAdminAccess(requestRoleDto,email,role));
+    }
+
+    @PostMapping("/requestDoctorAccess")
+    public ResponseEntity<RequestRoleDto> requestDoctorAccess(@Valid @RequestBody RequestRoleDto requestRoleDto,@RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException {
+        if (!utilityFunction.validateRequestUser(email, role)) throw new UnAuthorizedException();
+        return ResponseEntity.ok(userService.requestDoctorAccess(requestRoleDto,email,role));
     }
 
 }

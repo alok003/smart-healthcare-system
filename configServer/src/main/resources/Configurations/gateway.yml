@@ -8,6 +8,10 @@ spring:
               uri: lb://user-service
               predicates:
                 - Path=/api/user-service/**
+            - id: admin-service
+              uri: lb://admin-service
+              predicates:
+                - Path=/api/admin-service/**
 server:
   port: 8080
 

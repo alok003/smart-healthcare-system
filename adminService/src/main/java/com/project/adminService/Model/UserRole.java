@@ -1,4 +1,4 @@
-package com.project.userService.Entity;
+package com.project.adminService.Model;
 
 public enum UserRole {
     USER,

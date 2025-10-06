@@ -1,12 +1,12 @@
 package com.project.userService.Service;
 
 import com.project.userService.Entity.User;
-import com.project.userService.Entity.UserRole;
 import com.project.userService.Exceptions.UserAlreadyExistsException;
 import com.project.userService.Exceptions.UserNotFoundException;
 import com.project.userService.Model.AuthResponse;
 import com.project.userService.Model.LoginRequest;
 import com.project.userService.Model.UserModel;
+import com.project.userService.Model.UserRole;
 import com.project.userService.Repository.UserRepository;
 import com.project.userService.Utility.JWTUtil;
 import com.project.userService.Utility.UtilityFunction;

@@ -1,5 +1,6 @@
 package com.project.userService.Entity;
 
+import com.project.userService.Model.UserRole;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;

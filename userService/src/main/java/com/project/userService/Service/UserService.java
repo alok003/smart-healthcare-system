@@ -2,6 +2,7 @@ package com.project.userService.Service;
 
 import com.project.userService.Entity.User;
 import com.project.userService.Exceptions.UserNotFoundException;
+import com.project.userService.Model.ChangeRequest;
 import com.project.userService.Model.RequestRoleDto;
 import com.project.userService.Model.UserModel;
 import com.project.userService.Model.UserRole;
@@ -13,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.validation.Valid;
+import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -64,5 +66,13 @@ public class UserService {
         requestRoleDto.setUserEmail(email);
         requestRoleDto.setUserRole(UserRole.DOCTOR);
         return adminClient.saveRequestAdminClient(email,UserRole.ADMIN.name(),requestRoleDto);
+    }
+
+    public String changeRole(@Valid ChangeRequest changeRequest) throws UserNotFoundException {
+        User user = userRepository.findByUserEmail(changeRequest.getEmail())
+                .orElseThrow(UserNotFoundException::new);
+        user.setUserRole(changeRequest.getRole());
+        user = userRepository.save(user);
+        return changeRequest.getEmail();
     }
 }

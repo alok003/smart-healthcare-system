@@ -2,6 +2,7 @@ package com.project.userService.Controller;
 
 import com.project.userService.Exceptions.UserNotFoundException;
 import com.project.userService.Exceptions.UnAuthorizedException;
+import com.project.userService.Model.ChangeRequest;
 import com.project.userService.Model.RequestRoleDto;
 import com.project.userService.Model.UserModel;
 import com.project.userService.Service.UserService;
@@ -61,5 +62,12 @@ public class UserController {
         if (!utilityFunction.validateRequestUser(email, role)) throw new UnAuthorizedException();
         return ResponseEntity.ok(userService.requestDoctorAccess(requestRoleDto,email,role));
     }
+
+    @PostMapping("/changeRole")
+    public ResponseEntity<String> changeRole(@Valid @RequestBody ChangeRequest changeRequest, @RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException, UserNotFoundException {
+        if (!utilityFunction.validateRequestAdmin(email, role)) throw new UnAuthorizedException();
+        return ResponseEntity.ok(userService.changeRole(changeRequest));
+    }
+
 
 }

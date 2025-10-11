@@ -1,5 +1,6 @@
 package com.project.adminService.Entity;
 
+import com.project.adminService.Model.Status;
 import com.project.adminService.Model.UserRole;
 import lombok.Data;
 import org.springframework.data.annotation.CreatedBy;
@@ -20,7 +21,9 @@ public class RequestRole {
     private String userEmail;
     @Field(targetType = FieldType.STRING)
     private UserRole userRole;
-    private Map<String,Object> attributes;
+    @Field(targetType = FieldType.STRING)
+    private Status requestStatus;
+    private Doctor doctor;
     @CreatedDate
     private Instant createdAt;
 }

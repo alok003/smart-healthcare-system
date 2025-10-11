@@ -13,5 +13,5 @@ public class RequestRoleDto {
     private String id;
     private String userEmail;
     private UserRole userRole;
-    private Map<String,Object> attributes;
+    private DoctorDto doctorDto;
 }

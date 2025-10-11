@@ -35,4 +35,10 @@ public class AdminController {
         if(!utilityFunctions.validateRequestAdmin(email, role)) throw new UnAuthorizedException();
         return ResponseEntity.ok(adminService.declineRequest(id));
     }
+
+    @GetMapping("/approve/{id}")
+    public ResponseEntity<String> approveRequest(@RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role,@PathVariable String id) throws UnAuthorizedException, RequestNotFoundException {
+        if (!utilityFunctions.validateRequestAdmin(email, role)) throw new UnAuthorizedException();
+        return ResponseEntity.ok(adminService.approveRequest(id,email));
+    }
 }

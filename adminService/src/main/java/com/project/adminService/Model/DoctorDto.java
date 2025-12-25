@@ -1,5 +1,6 @@
 package com.project.adminService.Model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.project.adminService.Model.Specialization;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,6 +10,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @RequiredArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class DoctorDto {
     private String id;
     private String email;

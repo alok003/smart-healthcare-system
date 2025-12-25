@@ -1,11 +1,13 @@
 package com.project.userService.Model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
 import javax.validation.constraints.*;
 @Data
 @RequiredArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserModel {
     @NotBlank(message = "Email Field must be filled")
     @Email(message = "Enter correct email format")

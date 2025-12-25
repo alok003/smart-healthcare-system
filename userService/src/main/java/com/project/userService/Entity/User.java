@@ -22,7 +22,7 @@ public class User {
     private String userName;
     private int userAge;
     @Enumerated(EnumType.STRING)
-    private UserRole userRole = UserRole.USER;
+    private UserRole userRole;
     @CreationTimestamp
     private LocalDateTime createdAt;
     @UpdateTimestamp

@@ -43,6 +43,7 @@ public class AuthService {
         User user = utilityFunction.cnvBeanToEntity(userModel);
         user.setUserPassword(passwordEncoder.encode(user.getUserPassword()));
         if(userModel.getIsPatient())user.setUserRole(UserRole.PATIENT);
+        else user.setUserRole(UserRole.USER);
         User save = userRepository.save(user);
         return utilityFunction.cnvEntityToBean(save);
     }

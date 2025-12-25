@@ -14,14 +14,14 @@ public class UtilityFunctions {
     public RequestRole cnvBeanToEntity(RequestRoleDto requestRoleDto) {
         RequestRole requestRole = new RequestRole();
         BeanUtils.copyProperties(requestRoleDto, requestRole);
-        requestRole.setDoctor(cnvBeanToEntityDoctor(requestRoleDto.getDoctorDto()));
+        if(Objects.nonNull(requestRoleDto.getDoctorDto()))requestRole.setDoctor(cnvBeanToEntityDoctor(requestRoleDto.getDoctorDto()));
         return requestRole;
     }
 
     public RequestRoleDto cnvEntityToBean(RequestRole requestRole) {
         RequestRoleDto requestRoleDto = new RequestRoleDto();
         BeanUtils.copyProperties(requestRole, requestRoleDto);
-        requestRoleDto.setDoctorDto(cnvEntityToBeanDoctor(requestRole.getDoctor()));
+        if(Objects.nonNull(requestRole.getDoctor()))requestRoleDto.setDoctorDto(cnvEntityToBeanDoctor(requestRole.getDoctor()));
         return requestRoleDto;
     }
 

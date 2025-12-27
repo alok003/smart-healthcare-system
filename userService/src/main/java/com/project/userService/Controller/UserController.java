@@ -69,5 +69,10 @@ public class UserController {
         return ResponseEntity.ok(userService.changeRole(changeRequest));
     }
 
+    @GetMapping("/checkStatus")
+    public ResponseEntity<RequestRoleDto> checkStatus(@RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException{
+        if (!utilityFunction.validateRequestUser(email, role)) throw new UnAuthorizedException();
+        return ResponseEntity.ok(userService.checkStatus(email));
 
+    }
 }

@@ -12,6 +12,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -31,7 +32,20 @@ public class AdminService {
     }
 
     public RequestRoleDto saveRequest(RequestRoleDto requestRoleDto) {
-        RequestRole requestRole = utilityFunctions.cnvBeanToEntity(requestRoleDto);//chk hre
+        Optional<RequestRole> requestRoleOptional = adminRepository.findByUserEmail(requestRoleDto.getUserEmail());
+        RequestRole requestRole = null;
+        if(requestRoleOptional.isEmpty()){
+            requestRole = utilityFunctions.cnvBeanToEntity(requestRoleDto);
+        }else{
+            requestRole=requestRoleOptional.get();
+            requestRole.setUserRole(requestRoleDto.getUserRole());
+            if(requestRoleDto.getUserRole().name().equals("DOCTOR")&&Objects.nonNull(requestRoleDto.getDoctorDto())){
+                requestRole.setDoctor(utilityFunctions.cnvBeanToEntityDoctor(requestRoleDto.getDoctorDto()));
+            }
+            else{
+                requestRole.setDoctor(null);
+            }
+        }
         requestRole.setRequestStatus(Status.PENDING);
         return utilityFunctions.cnvEntityToBean(adminRepository.save(requestRole));
     }
@@ -66,5 +80,13 @@ public class AdminService {
             request.setRequestStatus(Status.APPROVED);
             return adminRepository.save(request).getId();
         }
+    }
+
+    public RequestRoleDto checkStatus(String email) throws RequestNotFoundException {
+        Optional<RequestRole> requestRole = adminRepository.findByUserEmail(email);
+        if (requestRole.isEmpty()) {
+            throw new RequestNotFoundException();
+        }
+        return utilityFunctions.cnvEntityToBean(requestRole.get());
     }
 }

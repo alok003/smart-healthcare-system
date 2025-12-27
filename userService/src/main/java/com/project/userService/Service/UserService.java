@@ -75,4 +75,8 @@ public class UserService {
         user = userRepository.save(user);
         return changeRequest.getEmail();
     }
+
+    public RequestRoleDto checkStatus(String email) {
+        return adminClient.checkStatusViaEmail(email,UserRole.ADMIN.name());
+    }
 }

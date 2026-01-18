@@ -25,6 +25,10 @@ public class UtilityFunctions {
         return Objects.equals(role, "ADMIN")&&validateEmail(email);
     }
 
+    public Boolean validateRequestDoctor(String email,String role){
+        return Objects.equals(role, "DOCTOR")&&validateEmail(email);
+    }
+
     private boolean validateEmail(String email) {
         return email != null && email.contains("@");
     }

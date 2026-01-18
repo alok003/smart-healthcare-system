@@ -1,0 +1,16 @@
+info:
+  app:
+    name: appointment-service
+    description: Appointment Service for SHS.
+    version: 1.0.0
+server:
+  port: 8014
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"

@@ -1,11 +1,10 @@
-package com.project.doctorService.Entity;
+package com.project.appointmentService.Entity;
 
-import com.project.doctorService.Model.Bookings;
-import com.project.doctorService.Model.Gender;
-import com.project.doctorService.Model.Specialization;
-import lombok.AllArgsConstructor;
+
+
+import com.project.appointmentService.Model.HealthCheck;
+import com.project.appointmentService.Model.Status;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedBy;
@@ -15,20 +14,22 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 
 import java.time.Instant;
-import java.util.List;
+import java.time.LocalDate;
+
 @Data
-@Document(collection = "Doctors")
-public class Doctor {
+@Document(collection = "Appointments")
+public class Appointment {
     @Id
     private String id;
-    private String email;
+    private String patientId;
+    private String doctorId;
     @Field(targetType = FieldType.STRING)
-    private Gender gender;
-    private List<Specialization> specializations;
-    private String licenseNumber;
-    private String contactNumber;
-    private String overview;
-    private Bookings bookings;
+    private Status status;
+    private String subject;
+    private String description;
+    private LocalDate date;
+    private HealthCheck healthCheck;
+    private String prescription;
     @CreatedDate
     private Instant createdAt;
     @LastModifiedDate

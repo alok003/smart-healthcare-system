@@ -12,6 +12,14 @@ spring:
               uri: lb://admin-service
               predicates:
                 - Path=/api/admin-service/**
+            - id: doctor-service
+              uri: lb://doctor-service
+              predicates:
+                - Path=/api/doctor-service/**
+            - id: patient-service
+              uri: lb://patient-service
+              predicates:
+                - Path=/api/patient-service/**
 server:
   port: 8080
 

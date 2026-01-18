@@ -1,9 +1,11 @@
 package com.project.doctorService.Model;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
 
+import java.time.Instant;
 import java.util.List;
 @Data
 @AllArgsConstructor
@@ -16,4 +18,11 @@ public class DoctorDto {
     private String licenseNumber;
     private String contactNumber;
     private String overview;
+    private Bookings bookings;
+    @CreatedDate
+    private Instant createdAt;
+    @LastModifiedDate
+    private Instant updatedAt;
+    @LastModifiedBy
+    private String lastModifiedBy;
 }

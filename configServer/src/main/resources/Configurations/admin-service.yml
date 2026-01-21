@@ -6,7 +6,7 @@ info:
 spring:
   data:
     mongodb:
-      uri: mongodb://localhost:27017/adminservice
+      uri: mongodb://localhost:27017/smart-healthcare-service
 server:
   port: 8011
 eureka:

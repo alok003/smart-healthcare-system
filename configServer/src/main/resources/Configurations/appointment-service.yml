@@ -3,6 +3,10 @@ info:
     name: appointment-service
     description: Appointment Service for SHS.
     version: 1.0.0
+spring:
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/smart-healthcare-service
 server:
   port: 8014
 eureka:

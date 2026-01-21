@@ -3,8 +3,12 @@ info:
     name: patient-service
     description: Patient Service for SHS.
     version: 1.0.0
+spring:
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/smart-healthcare-service
 server:
-  port: 8013
+  port: 8011
 eureka:
   client:
     serviceUrl:

@@ -6,13 +6,13 @@ info:
 spring:
   data:
     mongodb:
-      uri: mongodb://localhost:27017/smart-healthcare-service
+      uri: mongodb://${MONGO_HOST:localhost}:27017/smart-healthcare-service
 server:
   port: 8014
 eureka:
   client:
     serviceUrl:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: http://${EUREKA_HOST:localhost}:8761/eureka/
 management:
   endpoints:
     web:

@@ -12,5 +12,9 @@ spring:
           search-locations: classpath:/Configurations
 eureka:
   client:
-    serviceUrl:
-      defaultZone: http://localhost:8761/eureka/
+    enabled: false
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

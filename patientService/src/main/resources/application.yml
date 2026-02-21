@@ -2,4 +2,4 @@ spring:
   application:
     name: patient-service
   config:
-    import: optional:configserver:http://localhost:8888
+    import: optional:configserver:http://${CONFIG_HOST:localhost}:8888

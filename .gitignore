@@ -1,7 +1,43 @@
-# Ignore Excel files
-*.xlsx
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+*.jar
+*.war
+*.ear
 
-# Ignore text files
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Environment
+*.env
+Vault.env
+
+# Excel and Office files
+*.xlsx
+*.xls
+*.docx
+*.doc
+~$*
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
 *.txt
 
-*.env
+# Docker
+.dockerignore
+
+# OS
+.DS_Store
+Thumbs.db

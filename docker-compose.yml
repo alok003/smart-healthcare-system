@@ -1,0 +1,234 @@
+services:
+  # Infrastructure Services
+  config-server:
+    build:
+      context: ./configServer
+      dockerfile: Dockerfile
+    container_name: config-server
+    ports:
+      - "8888:8888"
+    networks:
+      - healthcare-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8888/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  eureka-server:
+    build:
+      context: ./eurekaServer
+      dockerfile: Dockerfile
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    environment:
+      - CONFIG_HOST=config-server
+    depends_on:
+      config-server:
+        condition: service_healthy
+    networks:
+      - healthcare-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8761/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    container_name: gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - CONFIG_HOST=config-server
+      - EUREKA_HOST=eureka-server
+    env_file:
+      - Vault.env
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - healthcare-network
+
+  # Business Services
+  user-service:
+    build:
+      context: ./userService
+      dockerfile: Dockerfile
+    container_name: user-service
+    ports:
+      - "8010:8010"
+    environment:
+      - CONFIG_HOST=config-server
+      - EUREKA_HOST=eureka-server
+      - MYSQL_HOST=host.docker.internal
+    env_file:
+      - Vault.env
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - healthcare-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  admin-service:
+    build:
+      context: ./adminService
+      dockerfile: Dockerfile
+    container_name: admin-service
+    ports:
+      - "8011:8011"
+    environment:
+      - CONFIG_HOST=config-server
+      - EUREKA_HOST=eureka-server
+      - MONGO_HOST=host.docker.internal
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - healthcare-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  doctor-service:
+    build:
+      context: ./doctorService
+      dockerfile: Dockerfile
+    container_name: doctor-service
+    ports:
+      - "8012:8012"
+    environment:
+      - CONFIG_HOST=config-server
+      - EUREKA_HOST=eureka-server
+      - MONGO_HOST=host.docker.internal
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - healthcare-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  patient-service:
+    build:
+      context: ./patientService
+      dockerfile: Dockerfile
+    container_name: patient-service
+    ports:
+      - "8013:8013"
+    environment:
+      - CONFIG_HOST=config-server
+      - EUREKA_HOST=eureka-server
+      - MONGO_HOST=host.docker.internal
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - healthcare-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  appointment-service:
+    build:
+      context: ./appointmentService
+      dockerfile: Dockerfile
+    container_name: appointment-service
+    ports:
+      - "8014:8014"
+    environment:
+      - CONFIG_HOST=config-server
+      - EUREKA_HOST=eureka-server
+      - MONGO_HOST=host.docker.internal
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - healthcare-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  notification-service:
+    build:
+      context: ./notificationService
+      dockerfile: Dockerfile
+    container_name: notification-service
+    ports:
+      - "8015:8015"
+    environment:
+      - CONFIG_HOST=config-server
+      - EUREKA_HOST=eureka-server
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    networks:
+      - healthcare-network
+
+  # Messaging Infrastructure
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - healthcare-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+    networks:
+      - healthcare-network
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    depends_on:
+      - kafka
+    ports:
+      - "9090:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+    networks:
+      - healthcare-network
+
+networks:
+  healthcare-network:
+    driver: bridge

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Smart Healthcare System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            margin: 0;
+            color: #3498db;
+        }
+        .content {
+            color: #555;
+            line-height: 1.6;
+        }
+        .content p {
+            margin: 15px 0;
+        }
+        .highlight {
+            color: #3498db;
+            font-weight: bold;
+        }
+        .role-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .role-patient {
+            background-color: #2ecc71;
+            color: white;
+        }
+        .role-user {
+            background-color: #95a5a6;
+            color: white;
+        }
+        .info-box {
+            background-color: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #3498db;
+        }
+        .info-box h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .steps {
+            margin: 10px 0;
+        }
+        .steps li {
+            margin: 8px 0;
+        }
+        .user-details {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .user-details p {
+            margin: 8px 0;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏥 Smart Healthcare System</h1>
+        </div>
+        <div class="content">
+            <p>Dear <span class="highlight" th:text="${name}">User</span>,</p>
+            <p>Welcome to <strong>Smart Healthcare System</strong>!</p>
+            
+            <div class="user-details">
+                <p><strong>📧 Email:</strong> <span th:text="${email}">email@example.com</span></p>
+                <p><strong>👤 Name:</strong> <span th:text="${name}">User Name</span></p>
+                <p><strong>🎂 Age:</strong> <span th:text="${age}">25</span> years</p>
+                <p><strong>🔖 Role:</strong> <span class="role-badge" th:classappend="${isPatient} ? 'role-patient' : 'role-user'" th:text="${role}">USER</span></p>
+            </div>
+            
+            <p>Your account has been successfully created!</p>
+            
+            <!-- Patient Section -->
+            <div th:if="${isPatient}" class="info-box">
+                <h3>✅ Patient Access Activated</h3>
+                <p>You now have full access to patient features:</p>
+                <ul class="steps">
+                    <li>Search and book appointments with doctors</li>
+                    <li>View and manage your health records</li>
+                    <li>Track your medical history and prescriptions</li>
+                    <li>Receive appointment reminders and notifications</li>
+                </ul>
+                <p><strong>Get Started:</strong> Log in to your account and book your first appointment!</p>
+            </div>
+            
+            <!-- Non-Patient Section -->
+            <div th:unless="${isPatient}" class="info-box">
+                <h3>📋 Next Steps to Get Full Access</h3>
+                <p>You are currently registered as a <strong>USER</strong>. To access Doctor or Admin features, please follow these steps:</p>
+                
+                <h4>🩺 To Become a Doctor:</h4>
+                <ol class="steps">
+                    <li>Log in to your account</li>
+                    <li>Navigate to <strong>Profile Settings</strong></li>
+                    <li>Click on <strong>"Request Doctor Access"</strong></li>
+                    <li>Fill in your medical credentials:
+                        <ul>
+                            <li>Medical License Number</li>
+                            <li>Specialization</li>
+                            <li>Years of Experience</li>
+                            <li>Hospital/Clinic Affiliation</li>
+                        </ul>
+                    </li>
+                    <li>Submit your request for admin approval</li>
+                    <li>Wait for admin verification (usually 24-48 hours)</li>
+                    <li>You'll receive an email once approved</li>
+                </ol>
+                
+                <h4>👨‍💼 To Become an Admin:</h4>
+                <ol class="steps">
+                    <li>Contact the system administrator directly</li>
+                    <li>Provide your user credentials and reason for admin access</li>
+                    <li>Admin access is granted only to authorized personnel</li>
+                    <li>You'll be notified via email once access is granted</li>
+                </ol>
+                
+                <p><strong>Note:</strong> You can also register as a patient to book appointments while your doctor/admin request is being processed.</p>
+            </div>
+            
+            <p>If you have any questions or need assistance, feel free to reach out to our support team.</p>
+            <p>Thank you for choosing Smart Healthcare System!</p>
+            <p>Best regards,<br><strong>Smart Healthcare Team</strong></p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2026 Smart Healthcare System. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

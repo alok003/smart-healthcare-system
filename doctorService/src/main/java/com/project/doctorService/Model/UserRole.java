@@ -1,4 +1,4 @@
-package com.project.userService.Model;
+package com.project.doctorService.Model;
 
 public enum UserRole {
     USER,

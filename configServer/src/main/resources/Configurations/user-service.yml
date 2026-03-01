@@ -9,20 +9,23 @@ spring:
     username: ${DATABASE_USERNAME}
     password: ${DATABASE_PASS}
     driver-class-name: com.mysql.cj.jdbc.Driver
-
   jpa:
     hibernate:
       ddl-auto: update
       naming:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
     show-sql: true
+  kafka:
+    bootstrap-servers: ${KAFKA_HOST:localhost}:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 server:
   port: 8010
 eureka:
   client:
     serviceUrl:
       defaultZone: http://${EUREKA_HOST:localhost}:8761/eureka/
-
 app:
   secret-key: ${SECRET_KEY}
   expiration: ${EXPIRATION}

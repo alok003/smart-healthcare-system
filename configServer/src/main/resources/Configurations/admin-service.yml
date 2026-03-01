@@ -7,6 +7,11 @@ spring:
   data:
     mongodb:
       uri: mongodb://${MONGO_HOST:localhost}:27017/smart-healthcare-service
+  kafka:
+    bootstrap-servers: ${KAFKA_HOST:localhost}:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 server:
   port: 8011
 eureka:

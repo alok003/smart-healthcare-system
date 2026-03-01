@@ -5,6 +5,8 @@ import com.project.doctorService.Exceptions.DoctorNotFoundException;
 import com.project.doctorService.Model.Availibility;
 import com.project.doctorService.Model.BookingList;
 import com.project.doctorService.Model.DoctorDto;
+import com.project.doctorService.Model.UserRole;
+import com.project.doctorService.RESTCalls.AppointmentClient;
 import com.project.doctorService.Repository.DoctorRepository;
 import com.project.doctorService.Utility.UtilityFunctions;
 import lombok.AllArgsConstructor;
@@ -20,6 +22,7 @@ public class DoctorService {
     private static final int DAYS_TO_INITIALIZE = 31;
     private DoctorRepository doctorRepository;
     private UtilityFunctions utilityFunctions;
+    private AppointmentClient appointmentClient;
 
     public DoctorDto saveRequest(DoctorDto doctorDto) {
         Optional<Doctor> doctor=doctorRepository.findByEmail(doctorDto.getEmail());
@@ -46,7 +49,7 @@ public class DoctorService {
             Map<LocalDate,BookingList> newList=doctor.get().getBookings().getBookingListMap();
             for(LocalDate days:leave){
                 if(newList.containsKey(days)){
-                    cancelAppointments(newList.get(days).getBookingId());
+                    cancelAppointments(newList.get(days).getBookingId(),email);
                     newList.get(days).setAvailibility(Availibility.UNAVAILABLE);
                     newList.get(days).setBookingId(new ArrayList<>());
                 }
@@ -57,9 +60,9 @@ public class DoctorService {
         }else throw new DoctorNotFoundException();
     }
 
-    public void cancelAppointments(List<String> bookingIds){
+    public void cancelAppointments(List<String> bookingIds,String email){
         for(String bId:bookingIds){
-            //cancel appointment via feign...
+            appointmentClient.cancelAppointmentAppointmentClient(email, UserRole.ADMIN.name(),bId);
         }
     }
 

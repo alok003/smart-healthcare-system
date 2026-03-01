@@ -69,6 +69,7 @@ services:
       - CONFIG_HOST=config-server
       - EUREKA_HOST=eureka-server
       - MYSQL_HOST=host.docker.internal
+      - KAFKA_HOST=kafka
     env_file:
       - Vault.env
     depends_on:
@@ -92,6 +93,7 @@ services:
       - CONFIG_HOST=config-server
       - EUREKA_HOST=eureka-server
       - MONGO_HOST=host.docker.internal
+      - KAFKA_HOST=kafka
     depends_on:
       config-server:
         condition: service_healthy
@@ -113,6 +115,7 @@ services:
       - CONFIG_HOST=config-server
       - EUREKA_HOST=eureka-server
       - MONGO_HOST=host.docker.internal
+      - KAFKA_HOST=kafka
     depends_on:
       config-server:
         condition: service_healthy
@@ -134,6 +137,7 @@ services:
       - CONFIG_HOST=config-server
       - EUREKA_HOST=eureka-server
       - MONGO_HOST=host.docker.internal
+      - KAFKA_HOST=kafka
     depends_on:
       config-server:
         condition: service_healthy
@@ -155,6 +159,7 @@ services:
       - CONFIG_HOST=config-server
       - EUREKA_HOST=eureka-server
       - MONGO_HOST=host.docker.internal
+      - KAFKA_HOST=kafka
     depends_on:
       config-server:
         condition: service_healthy
@@ -175,6 +180,9 @@ services:
     environment:
       - CONFIG_HOST=config-server
       - EUREKA_HOST=eureka-server
+      - KAFKA_HOST=kafka
+    env_file:
+        - Vault.env
     depends_on:
       config-server:
         condition: service_healthy

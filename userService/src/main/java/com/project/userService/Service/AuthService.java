@@ -11,12 +11,15 @@ import com.project.userService.Repository.UserRepository;
 import com.project.userService.Utility.JWTUtil;
 import com.project.userService.Utility.UtilityFunction;
 import lombok.AllArgsConstructor;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.validation.Valid;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 @AllArgsConstructor
@@ -26,6 +29,7 @@ public class AuthService {
     private UtilityFunction utilityFunction;
     private final JWTUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
+    private final KafkaTemplate<String, Map<String, Object>> kafkaTemplate;
 
     public AuthResponse login(LoginRequest request) throws UserNotFoundException {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken
@@ -45,6 +49,15 @@ public class AuthService {
         if(userModel.getIsPatient())user.setUserRole(UserRole.PATIENT);
         else user.setUserRole(UserRole.USER);
         User save = userRepository.save(user);
+        
+        Map<String, Object> emailData = new HashMap<>();
+        emailData.put("userEmail", save.getUserEmail());
+        emailData.put("userName", save.getUserName());
+        emailData.put("userAge", save.getUserAge());
+        emailData.put("role", save.getUserRole().name());
+        emailData.put("isPatient", userModel.getIsPatient());
+        kafkaTemplate.send("welcome-notification", emailData);
+        
         return utilityFunction.cnvEntityToBean(save);
     }
 

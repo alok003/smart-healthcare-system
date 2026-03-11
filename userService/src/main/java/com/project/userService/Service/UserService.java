@@ -10,6 +10,7 @@ import com.project.userService.RESTCalls.AdminClient;
 import com.project.userService.Repository.UserRepository;
 import com.project.userService.Utility.UtilityFunction;
 import lombok.AllArgsConstructor;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +25,7 @@ public class UserService {
     private PasswordEncoder passwordEncoder;
     private UtilityFunction utilityFunction;
     private AdminClient adminClient;
+    private KafkaTemplate<String, RequestRoleDto> kafkaTemplate;
 
     public UserModel findById(String userId) throws UserNotFoundException {
         User user = userRepository.findById(userId)
@@ -56,16 +58,18 @@ public class UserService {
         } else throw new UserNotFoundException();
     }
 
-    public RequestRoleDto requestAdminAccess(@Valid RequestRoleDto requestRoleDto, String email, String role) {
+    public String requestAdminAccess(@Valid RequestRoleDto requestRoleDto, String email, String role) {
         requestRoleDto.setUserEmail(email);
         requestRoleDto.setUserRole(UserRole.ADMIN);
-        return adminClient.saveRequestAdminClient(email,UserRole.ADMIN.name(),requestRoleDto);
+        kafkaTemplate.send("role-request", requestRoleDto);
+        return "Request for Admin access sent successfully";
     }
 
-    public RequestRoleDto requestDoctorAccess(@Valid RequestRoleDto requestRoleDto, String email, String role) {
+    public String requestDoctorAccess(@Valid RequestRoleDto requestRoleDto, String email, String role) {
         requestRoleDto.setUserEmail(email);
         requestRoleDto.setUserRole(UserRole.DOCTOR);
-        return adminClient.saveRequestAdminClient(email,UserRole.ADMIN.name(),requestRoleDto);
+        kafkaTemplate.send("role-request", requestRoleDto);
+        return "Request for Doctor access sent successfully";
     }
 
     public String changeRole(@Valid ChangeRequest changeRequest) throws UserNotFoundException {

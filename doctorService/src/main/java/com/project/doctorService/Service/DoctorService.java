@@ -24,10 +24,12 @@ public class DoctorService {
     private UtilityFunctions utilityFunctions;
     private AppointmentClient appointmentClient;
 
-    public DoctorDto saveRequest(DoctorDto doctorDto) {
+    public DoctorDto saveRequest(DoctorDto doctorDto, int maxCount, double rate) {
         Optional<Doctor> doctor=doctorRepository.findByEmail(doctorDto.getEmail());
         if(doctor.isEmpty()){
             doctorDto.getBookings().setBookingListMap(setInitialBookingTemplate());
+            doctorDto.getBookings().setRate(rate);
+            doctorDto.getBookings().setMaxCount(maxCount);
             Doctor saved=doctorRepository.save(utilityFunctions.cnvBeanToEntity(doctorDto));
             return utilityFunctions.cnvEntityToBean(saved);
         }else return utilityFunctions.cnvEntityToBean(doctor.get());

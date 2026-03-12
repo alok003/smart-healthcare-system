@@ -61,9 +61,9 @@ public class AdminService {
         }
     }
 
-    public String approveRequest(String id, String email) throws RequestNotFoundException {
+    public String approveRequest(String id, String email,int maxCount, double rate) throws RequestNotFoundException {
         Optional<RequestRole> requestRole = adminRepository.findById(id);
-        if (requestRole.isEmpty()) {
+        if (requestRole.isEmpty()||!requestRole.get().getRequestStatus().equals(Status.APPROVED)) {
             throw new RequestNotFoundException();
         } else {
             RequestRole request = requestRole.get();
@@ -75,7 +75,7 @@ public class AdminService {
             String responseUserId = userClient.changeRole(changeRequest, email, UserRole.ADMIN.name());
             Doctor doctor = request.getDoctor();
             if (!request.getUserRole().name().equals("ADMIN")) {
-                String responseDoctorId = doctorClient.saveDoctor(utilityFunctions.cnvEntityToBeanDoctor(doctor), email, UserRole.ADMIN.name());
+                String responseDoctorId = doctorClient.saveDoctor(utilityFunctions.cnvEntityToBeanDoctor(doctor), maxCount, rate, email, UserRole.ADMIN.name());
             }
             request.setRequestStatus(Status.APPROVED);
             return adminRepository.save(request).getId();

@@ -63,7 +63,7 @@ public class AdminService {
 
     public String approveRequest(String id, String email,int maxCount, double rate) throws RequestNotFoundException {
         Optional<RequestRole> requestRole = adminRepository.findById(id);
-        if (requestRole.isEmpty()||!requestRole.get().getRequestStatus().equals(Status.APPROVED)) {
+        if (requestRole.isEmpty()||requestRole.get().getRequestStatus().equals(Status.APPROVED)) {
             throw new RequestNotFoundException();
         } else {
             RequestRole request = requestRole.get();

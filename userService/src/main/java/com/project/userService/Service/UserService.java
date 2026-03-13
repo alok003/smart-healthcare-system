@@ -15,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.validation.Valid;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -25,7 +26,7 @@ public class UserService {
     private PasswordEncoder passwordEncoder;
     private UtilityFunction utilityFunction;
     private AdminClient adminClient;
-    private KafkaTemplate<String, RequestRoleDto> kafkaTemplate;
+    private KafkaTemplate<String, Map<String,Object>> kafkaTemplate;
 
     public UserModel findById(String userId) throws UserNotFoundException {
         User user = userRepository.findById(userId)
@@ -61,14 +62,14 @@ public class UserService {
     public String requestAdminAccess(@Valid RequestRoleDto requestRoleDto, String email, String role) {
         requestRoleDto.setUserEmail(email);
         requestRoleDto.setUserRole(UserRole.ADMIN);
-        kafkaTemplate.send("role-request", requestRoleDto);
+        kafkaTemplate.send("role-request", UtilityFunction.cnvDtoToMap(requestRoleDto));
         return "Request for Admin access sent successfully";
     }
 
     public String requestDoctorAccess(@Valid RequestRoleDto requestRoleDto, String email, String role) {
         requestRoleDto.setUserEmail(email);
         requestRoleDto.setUserRole(UserRole.DOCTOR);
-        kafkaTemplate.send("role-request", requestRoleDto);
+        kafkaTemplate.send("role-request", UtilityFunction.cnvDtoToMap(requestRoleDto));
         return "Request for Doctor access sent successfully";
     }
 

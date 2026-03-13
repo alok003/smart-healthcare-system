@@ -52,13 +52,13 @@ public class UserController {
     }
 
     @PostMapping("/requestAdminAccess")
-    public ResponseEntity<RequestRoleDto> requestAdminAccess(@Valid @RequestBody RequestRoleDto requestRoleDto,@RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException {
+    public ResponseEntity<String> requestAdminAccess(@Valid @RequestBody RequestRoleDto requestRoleDto,@RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException {
         if (!utilityFunction.validateRequestUser(email, role)) throw new UnAuthorizedException();
         return ResponseEntity.ok(userService.requestAdminAccess(requestRoleDto,email,role));
     }
 
     @PostMapping("/requestDoctorAccess")
-    public ResponseEntity<RequestRoleDto> requestDoctorAccess(@Valid @RequestBody RequestRoleDto requestRoleDto,@RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException {
+    public ResponseEntity<String> requestDoctorAccess(@Valid @RequestBody RequestRoleDto requestRoleDto,@RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException {
         if (!utilityFunction.validateRequestUser(email, role)) throw new UnAuthorizedException();
         return ResponseEntity.ok(userService.requestDoctorAccess(requestRoleDto,email,role));
     }

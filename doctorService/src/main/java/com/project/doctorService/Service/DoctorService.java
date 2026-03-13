@@ -2,10 +2,7 @@ package com.project.doctorService.Service;
 
 import com.project.doctorService.Entity.Doctor;
 import com.project.doctorService.Exceptions.DoctorNotFoundException;
-import com.project.doctorService.Model.Availibility;
-import com.project.doctorService.Model.BookingList;
-import com.project.doctorService.Model.DoctorDto;
-import com.project.doctorService.Model.UserRole;
+import com.project.doctorService.Model.*;
 import com.project.doctorService.RESTCalls.AppointmentClient;
 import com.project.doctorService.Repository.DoctorRepository;
 import com.project.doctorService.Utility.UtilityFunctions;
@@ -24,10 +21,14 @@ public class DoctorService {
     private UtilityFunctions utilityFunctions;
     private AppointmentClient appointmentClient;
 
-    public DoctorDto saveRequest(DoctorDto doctorDto) {
+    public DoctorDto saveRequest(DoctorDto doctorDto, int maxCount, double rate) {
         Optional<Doctor> doctor=doctorRepository.findByEmail(doctorDto.getEmail());
         if(doctor.isEmpty()){
-            doctorDto.getBookings().setBookingListMap(setInitialBookingTemplate());
+            Bookings bookings = new Bookings();
+            bookings.setBookingListMap(setInitialBookingTemplate());
+            bookings.setRate(rate);
+            bookings.setMaxCount(maxCount);
+            doctorDto.setBookings(bookings);
             Doctor saved=doctorRepository.save(utilityFunctions.cnvBeanToEntity(doctorDto));
             return utilityFunctions.cnvEntityToBean(saved);
         }else return utilityFunctions.cnvEntityToBean(doctor.get());

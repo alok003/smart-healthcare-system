@@ -19,9 +19,9 @@ public class DoctorController {
     private UtilityFunctions utilityFunctions;
 
     @PostMapping("/saveDoctor")
-    public ResponseEntity<DoctorDto> saveRequest(@RequestBody DoctorDto doctorDto, @RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException {
+    public ResponseEntity<DoctorDto> saveRequest(@RequestBody DoctorDto doctorDto, @RequestParam int maxCount, @RequestParam double rate, @RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException {
         if(!utilityFunctions.validateRequestAdmin(email, role)) throw new UnAuthorizedException();
-        return ResponseEntity.ok(doctorService.saveRequest(doctorDto));
+        return ResponseEntity.ok(doctorService.saveRequest(doctorDto,maxCount,rate));
     }
 
     @GetMapping("/getAllDoctors")

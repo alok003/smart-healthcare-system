@@ -2,7 +2,6 @@ package com.project.adminService.Utility;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.project.adminService.Entity.Doctor;
 import com.project.adminService.Entity.RequestRole;
 import com.project.adminService.Model.DoctorDto;
 import com.project.adminService.Model.RequestRoleDto;
@@ -20,27 +19,15 @@ public class UtilityFunctions {
     public RequestRole cnvBeanToEntity(RequestRoleDto requestRoleDto) {
         RequestRole requestRole = new RequestRole();
         BeanUtils.copyProperties(requestRoleDto, requestRole);
-        if(Objects.nonNull(requestRoleDto.getDoctorDto()))requestRole.setDoctor(cnvBeanToEntityDoctor(requestRoleDto.getDoctorDto()));
+        if(Objects.nonNull(requestRoleDto.getDoctorDto()))requestRole.setDoctorDto(requestRoleDto.getDoctorDto());
         return requestRole;
     }
 
     public RequestRoleDto cnvEntityToBean(RequestRole requestRole) {
         RequestRoleDto requestRoleDto = new RequestRoleDto();
         BeanUtils.copyProperties(requestRole, requestRoleDto);
-        if(Objects.nonNull(requestRole.getDoctor()))requestRoleDto.setDoctorDto(cnvEntityToBeanDoctor(requestRole.getDoctor()));
+        if(Objects.nonNull(requestRole.getDoctorDto()))requestRoleDto.setDoctorDto(requestRole.getDoctorDto());
         return requestRoleDto;
-    }
-
-    public DoctorDto cnvEntityToBeanDoctor(Doctor doctor) {
-        DoctorDto doctorDto = new DoctorDto();
-        BeanUtils.copyProperties(doctor, doctorDto);
-        return doctorDto;
-    }
-
-    public Doctor cnvBeanToEntityDoctor(DoctorDto doctorDto) {
-        Doctor doctor = new Doctor();
-        BeanUtils.copyProperties(doctorDto, doctor);
-        return doctor;
     }
 
     public Boolean validateRequestAdmin(String email, String role) {

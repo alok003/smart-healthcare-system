@@ -15,6 +15,7 @@ import java.util.Map;
 @Document(collection = "Patients")
 public class Patient {
     private String id;
+    private String name;
     private LocalDate dateOfBirth;
     @Field(targetType = FieldType.STRING)
     private Gender gender;

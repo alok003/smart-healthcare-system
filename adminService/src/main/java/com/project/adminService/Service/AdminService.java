@@ -1,10 +1,11 @@
 package com.project.adminService.Service;
 
-import com.project.adminService.Entity.Doctor;
 import com.project.adminService.Entity.RequestRole;
+import com.project.adminService.Exceptions.IllegalRequestException;
 import com.project.adminService.Exceptions.RequestNotFoundException;
 import com.project.adminService.Model.*;
 import com.project.adminService.RESTCalls.DoctorClient;
+import com.project.adminService.RESTCalls.PatientClient;
 import com.project.adminService.RESTCalls.UserClient;
 import com.project.adminService.Repository.AdminRepository;
 import com.project.adminService.Utility.UtilityFunctions;
@@ -22,16 +23,18 @@ public class AdminService {
     private UtilityFunctions utilityFunctions;
     private UserClient userClient;
     private DoctorClient doctorClient;
+    private PatientClient patientClient;
+    private static final String SYSTEM_EMAIL="system@shs.com";
 
-    public List<RequestRoleDto> getAllRequests() {
-        List<RequestRole> requests = adminRepository.findAll();
+    public List<RequestRoleDto> getAllActiveRequests() {
+        List<RequestRole> requests = adminRepository.findByRequestStatus(Status.PENDING);
         return requests
                 .stream()
                 .map(req -> utilityFunctions.cnvEntityToBean(req))
                 .toList();
     }
 
-    public RequestRoleDto saveRequest(RequestRoleDto requestRoleDto) {
+    public RequestRoleDto saveRequest(RequestRoleDto requestRoleDto) throws IllegalRequestException {
         Optional<RequestRole> requestRoleOptional = adminRepository.findByUserEmail(requestRoleDto.getUserEmail());
         RequestRole requestRole = null;
         if(requestRoleOptional.isEmpty()){
@@ -39,11 +42,16 @@ public class AdminService {
         }else{
             requestRole=requestRoleOptional.get();
             requestRole.setUserRole(requestRoleDto.getUserRole());
+            requestRole.setDoctorDto(null);
+            requestRole.setPatientDto(null);
             if(requestRoleDto.getUserRole().name().equals("DOCTOR")&&Objects.nonNull(requestRoleDto.getDoctorDto())){
-                requestRole.setDoctor(utilityFunctions.cnvBeanToEntityDoctor(requestRoleDto.getDoctorDto()));
+                requestRole.setDoctorDto(requestRoleDto.getDoctorDto());
+            }
+            else if(requestRoleDto.getUserRole().name().equals("PATIENT")&&Objects.nonNull(requestRoleDto.getPatientDto())){
+                requestRole.setPatientDto(requestRoleDto.getPatientDto());
             }
             else{
-                requestRole.setDoctor(null);
+                throw new IllegalRequestException();
             }
         }
         requestRole.setRequestStatus(Status.PENDING);
@@ -73,13 +81,34 @@ public class AdminService {
                     .build();
 
             String responseUserId = userClient.changeRole(changeRequest, email, UserRole.ADMIN.name());
-            Doctor doctor = request.getDoctor();
-            if (!request.getUserRole().name().equals("ADMIN")) {
-                String responseDoctorId = doctorClient.saveDoctor(utilityFunctions.cnvEntityToBeanDoctor(doctor), maxCount, rate, email, UserRole.ADMIN.name());
+
+            if (request.getUserRole().name().equals("DOCTOR")) {
+                DoctorDto doctorDto=request.getDoctorDto();
+                String responseDoctorId = doctorClient.saveDoctor(doctorDto, maxCount, rate, email, UserRole.ADMIN.name());
+            }else if(request.getUserRole().name().equals("PATIENT")){
+                PatientDto patientDto=request.getPatientDto();
+                String responsePatientId = patientClient.savePatient(patientDto, email, UserRole.ADMIN.name());
             }
             request.setRequestStatus(Status.APPROVED);
             return adminRepository.save(request).getId();
         }
+    }
+
+    public Void approvePatientRequest() throws RequestNotFoundException {
+            List<RequestRole> requestRoles = adminRepository.findByUserRoleAndRequestStatus(UserRole.PATIENT, Status.PENDING);
+            for(RequestRole request:requestRoles){
+                ChangeRequest changeRequest = ChangeRequest.builder()
+                        .email(request.getUserEmail())
+                        .role(request.getUserRole())
+                        .build();
+
+                String responseUserId = userClient.changeRole(changeRequest, SYSTEM_EMAIL, UserRole.ADMIN.name());
+                PatientDto patientDto=request.getPatientDto();
+                String responsePatientId = patientClient.savePatient(patientDto, SYSTEM_EMAIL, UserRole.ADMIN.name());
+                request.setRequestStatus(Status.APPROVED);
+                adminRepository.save(request);
+            }
+            return null;
     }
 
     public RequestRoleDto checkStatus(String email) throws RequestNotFoundException {

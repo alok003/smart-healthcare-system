@@ -17,4 +17,5 @@ public class RequestRoleDto {
     private UserRole userRole;
     private Status requestStatus;
     private DoctorDto doctorDto;
+    private PatientDto patientDto;
 }

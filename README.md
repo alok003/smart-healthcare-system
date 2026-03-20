@@ -115,6 +115,8 @@ DATABASE_USERNAME=root
 DATABASE_PASS=root
 SECRET_KEY=your-secret-key-here
 EXPIRATION=43200000
+EMAIL_USERNAME=alok8203thakur@gmail.com
+EMAIL_PASSWORD=your-password-here-generate-app-password-if-2FA-enabled
 ```
 
 ## 🚀 Quick Start
@@ -395,15 +397,5 @@ http://localhost:<port>/actuator/info
 4. Include health endpoints in controllers
 5. Update configuration files for new services
 6. Test locally before committing
-
-## 📄 License
-
-[Add your license information here]
-
-## 👥 Team
-
-[Add team member information here]
-
----
 
 **For detailed infrastructure setup and deployment instructions, see [INFRASTRUCTURE.md](INFRASTRUCTURE.md)**

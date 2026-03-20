@@ -1,10 +1,10 @@
-package com.project.adminService.Controller;
+package com.project.doctorService.Controller;
 
-import com.project.adminService.Exceptions.IllegalRequestException;
-import com.project.adminService.Exceptions.RequestNotFoundException;
-import com.project.adminService.Exceptions.UnAuthorizedException;
-import com.project.adminService.Exceptions.UserAlreadyExistsException;
-import com.project.adminService.Model.ApiExceptionResponseTemplate;
+import com.project.doctorService.Exceptions.DoctorNotFoundException;
+import com.project.doctorService.Exceptions.RequestNotFoundException;
+import com.project.doctorService.Exceptions.UnAuthorizedException;
+import com.project.doctorService.Exceptions.UserAlreadyExistsException;
+import com.project.doctorService.Model.ApiExceptionResponseTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -15,6 +15,12 @@ import java.util.Date;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(DoctorNotFoundException.class)
+    public ResponseEntity<ApiExceptionResponseTemplate> handleDoctorNotFound(DoctorNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                ApiExceptionResponseTemplate.builder().timestamp(new Date()).message(ex.getMessage()).build());
+    }
 
     @ExceptionHandler(RequestNotFoundException.class)
     public ResponseEntity<ApiExceptionResponseTemplate> handleRequestNotFound(RequestNotFoundException ex) {
@@ -31,12 +37,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<ApiExceptionResponseTemplate> handleUserAlreadyExists(UserAlreadyExistsException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(
-                ApiExceptionResponseTemplate.builder().timestamp(new Date()).message(ex.getMessage()).build());
-    }
-
-    @ExceptionHandler(IllegalRequestException.class)
-    public ResponseEntity<ApiExceptionResponseTemplate> handleIllegalRequest(IllegalRequestException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
                 ApiExceptionResponseTemplate.builder().timestamp(new Date()).message(ex.getMessage()).build());
     }
 

@@ -1,10 +1,8 @@
-package com.project.adminService.Controller;
+package com.project.appointmentService.Controller;
 
-import com.project.adminService.Exceptions.IllegalRequestException;
-import com.project.adminService.Exceptions.RequestNotFoundException;
-import com.project.adminService.Exceptions.UnAuthorizedException;
-import com.project.adminService.Exceptions.UserAlreadyExistsException;
-import com.project.adminService.Model.ApiExceptionResponseTemplate;
+import com.project.appointmentService.Exception.AppointmentNotFoundException;
+import com.project.appointmentService.Exception.UnAuthorizedException;
+import com.project.appointmentService.Model.ApiExceptionResponseTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -16,27 +14,15 @@ import java.util.Date;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(RequestNotFoundException.class)
-    public ResponseEntity<ApiExceptionResponseTemplate> handleRequestNotFound(RequestNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                ApiExceptionResponseTemplate.builder().timestamp(new Date()).message(ex.getMessage()).build());
-    }
-
     @ExceptionHandler(UnAuthorizedException.class)
     public ResponseEntity<ApiExceptionResponseTemplate> handleUnAuthorized(UnAuthorizedException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
                 ApiExceptionResponseTemplate.builder().timestamp(new Date()).message(ex.getMessage()).build());
     }
 
-    @ExceptionHandler(UserAlreadyExistsException.class)
-    public ResponseEntity<ApiExceptionResponseTemplate> handleUserAlreadyExists(UserAlreadyExistsException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(
-                ApiExceptionResponseTemplate.builder().timestamp(new Date()).message(ex.getMessage()).build());
-    }
-
-    @ExceptionHandler(IllegalRequestException.class)
-    public ResponseEntity<ApiExceptionResponseTemplate> handleIllegalRequest(IllegalRequestException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+    @ExceptionHandler(AppointmentNotFoundException.class)
+    public ResponseEntity<ApiExceptionResponseTemplate> handleAppointmentNotFound(AppointmentNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
                 ApiExceptionResponseTemplate.builder().timestamp(new Date()).message(ex.getMessage()).build());
     }
 

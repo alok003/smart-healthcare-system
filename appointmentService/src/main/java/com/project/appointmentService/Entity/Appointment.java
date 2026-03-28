@@ -4,6 +4,7 @@ package com.project.appointmentService.Entity;
 
 import com.project.appointmentService.Model.HealthCheck;
 import com.project.appointmentService.Model.Status;
+import com.project.appointmentService.Model.VisitDetails;
 import lombok.Data;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -28,8 +29,7 @@ public class Appointment {
     private String subject;
     private String description;
     private LocalDate date;
-    private HealthCheck healthCheck;
-    private String prescription;
+    private VisitDetails visitDetails;
     @CreatedDate
     private Instant createdAt;
     @LastModifiedDate

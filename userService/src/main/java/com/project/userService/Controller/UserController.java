@@ -63,6 +63,12 @@ public class UserController {
         return ResponseEntity.ok(userService.requestDoctorAccess(requestRoleDto,email,role));
     }
 
+    @PostMapping("/requestPatientAccess")
+    public ResponseEntity<String> requestPatientAccess(@Valid @RequestBody RequestRoleDto requestRoleDto,@RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException {
+        if (!utilityFunction.validateRequestUser(email, role)) throw new UnAuthorizedException();
+        return ResponseEntity.ok(userService.requestPatientAccess(requestRoleDto,email,role));
+    }
+
     @PostMapping("/changeRole")
     public ResponseEntity<String> changeRole(@Valid @RequestBody ChangeRequest changeRequest, @RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException, UserNotFoundException {
         if (!utilityFunction.validateRequestAdmin(email, role)) throw new UnAuthorizedException();

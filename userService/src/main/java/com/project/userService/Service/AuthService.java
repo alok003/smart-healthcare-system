@@ -46,8 +46,7 @@ public class AuthService {
         }
         User user = utilityFunction.cnvBeanToEntity(userModel);
         user.setUserPassword(passwordEncoder.encode(user.getUserPassword()));
-        if(userModel.getIsPatient())user.setUserRole(UserRole.PATIENT);
-        else user.setUserRole(UserRole.USER);
+        user.setUserRole(UserRole.USER);
         User save = userRepository.save(user);
         
         Map<String, Object> emailData = new HashMap<>();
@@ -55,7 +54,6 @@ public class AuthService {
         emailData.put("userName", save.getUserName());
         emailData.put("userAge", save.getUserAge());
         emailData.put("role", save.getUserRole().name());
-        emailData.put("isPatient", userModel.getIsPatient());
         kafkaTemplate.send("welcome-notification", emailData);
         
         return utilityFunction.cnvEntityToBean(save);

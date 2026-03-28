@@ -1,5 +1,7 @@
 package com.project.adminService.Entity;
 
+import com.project.adminService.Model.DoctorDto;
+import com.project.adminService.Model.PatientDto;
 import com.project.adminService.Model.Status;
 import com.project.adminService.Model.UserRole;
 import lombok.Data;
@@ -23,7 +25,8 @@ public class RequestRole {
     private UserRole userRole;
     @Field(targetType = FieldType.STRING)
     private Status requestStatus;
-    private Doctor doctor;
+    private DoctorDto doctorDto;
+    private PatientDto patientDto;
     @CreatedDate
     private Instant createdAt;
 }

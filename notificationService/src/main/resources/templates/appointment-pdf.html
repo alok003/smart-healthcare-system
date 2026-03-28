@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Prescription</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; color: #333; }
+        .header { text-align: center; border-bottom: 2px solid #3498db; padding-bottom: 15px; margin-bottom: 25px; }
+        .header h1 { color: #3498db; margin: 0; font-size: 22px; }
+        .header p { color: #777; margin: 5px 0 0 0; font-size: 13px; }
+        .section-title { color: #2c3e50; font-size: 14px; font-weight: bold; margin: 20px 0 8px 0; border-left: 4px solid #3498db; padding-left: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        td { padding: 9px 12px; border: 1px solid #ddd; font-size: 12px; }
+        td.label { background-color: #ecf0f1; font-weight: bold; width: 35%; color: #2c3e50; }
+        .status { display: inline-block; padding: 3px 10px; background-color: #27ae60; color: white; border-radius: 10px; font-size: 11px; font-weight: bold; }
+        .prescription-box { border: 1px solid #27ae60; background-color: #eafaf1; padding: 15px; border-radius: 5px; margin: 15px 0; font-size: 13px; white-space: pre-line; }
+        .vitals-grid { width: 100%; border-collapse: collapse; }
+        .vitals-grid td { padding: 8px 10px; border: 1px solid #ddd; font-size: 12px; width: 25%; }
+        .vitals-grid td.label { background-color: #ecf0f1; font-weight: bold; }
+        .footer { margin-top: 40px; text-align: center; font-size: 10px; color: #aaa; border-top: 1px solid #eee; padding-top: 12px; }
+        .disclaimer { background-color: #fef9e7; border: 1px solid #f39c12; padding: 10px 12px; border-radius: 4px; font-size: 11px; color: #7d6608; margin-top: 15px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏥 Smart Healthcare System</h1>
+        <p>Official Prescription Document</p>
+    </div>
+
+    <div class="section-title">Visit Information</div>
+    <table>
+        <tr>
+            <td class="label">Appointment ID</td>
+            <td th:text="${id}">-</td>
+        </tr>
+        <tr>
+            <td class="label">Patient ID</td>
+            <td th:text="${patientId}">-</td>
+        </tr>
+        <tr>
+            <td class="label">Doctor ID</td>
+            <td th:text="${doctorId}">-</td>
+        </tr>
+        <tr>
+            <td class="label">Visit Date</td>
+            <td th:text="${date}">-</td>
+        </tr>
+        <tr>
+            <td class="label">Reason for Visit</td>
+            <td th:text="${subject}">-</td>
+        </tr>
+        <tr>
+            <td class="label">Notes</td>
+            <td th:text="${description}">-</td>
+        </tr>
+        <tr>
+            <td class="label">Status</td>
+            <td><span class="status" th:text="${status}">VISITED</span></td>
+        </tr>
+    </table>
+
+    <div th:if="${visitDetails != null and visitDetails.healthCheck != null}">
+        <div class="section-title">Health Vitals Recorded During Visit</div>
+        <table class="vitals-grid">
+            <tr>
+                <td class="label">Height</td>
+                <td th:text="${visitDetails.healthCheck.height} + ' cm'">-</td>
+                <td class="label">Weight</td>
+                <td th:text="${visitDetails.healthCheck.weight} + ' kg'">-</td>
+            </tr>
+            <tr>
+                <td class="label">BMI</td>
+                <td th:text="${visitDetails.healthCheck.bmi}">-</td>
+                <td class="label">Body Temp</td>
+                <td th:text="${visitDetails.healthCheck.bodyTemperature} + ' °C'">-</td>
+            </tr>
+            <tr>
+                <td class="label">BP (Sys/Dia)</td>
+                <td th:text="${visitDetails.healthCheck.bpSys} + ' / ' + ${visitDetails.healthCheck.bpDia} + ' mmHg'">-</td>
+                <td class="label">Heart Rate</td>
+                <td th:text="${visitDetails.healthCheck.heartRate} + ' bpm'">-</td>
+            </tr>
+            <tr>
+                <td class="label">Oxygen Level</td>
+                <td th:text="${visitDetails.healthCheck.oxyLvl} + ' %'">-</td>
+                <td class="label">Blood Sugar</td>
+                <td th:text="${visitDetails.healthCheck.bloodSugar} + ' mg/dL'">-</td>
+            </tr>
+            <tr>
+                <td class="label">Respiratory Rate</td>
+                <td th:text="${visitDetails.healthCheck.respiratoryRate} + ' breaths/min'">-</td>
+                <td class="label"></td>
+                <td></td>
+            </tr>
+        </table>
+    </div>
+
+    <div th:if="${visitDetails != null and visitDetails.prescription != null}">
+        <div class="section-title">💊 Prescription</div>
+        <div class="prescription-box" th:text="${visitDetails.prescription}">-</div>
+    </div>
+
+    <div class="disclaimer">
+        ⚠️ This prescription is issued by Smart Healthcare System. Please follow the prescribed dosage. Consult your doctor before making any changes to your medication.
+    </div>
+
+    <div class="footer">
+        <p>This is a system-generated document. &copy; 2026 Smart Healthcare System. All rights reserved.</p>
+    </div>
+</body>
+</html>

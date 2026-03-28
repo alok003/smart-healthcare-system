@@ -4,7 +4,8 @@ import lombok.Getter;
 
 @Getter
 public enum Subjects {
-    WELCOME("Welcome to Smart Healthcare System");
+    WELCOME("Welcome to Smart Healthcare System"),
+    PRESCRIPTION_READY("Your Prescription is Ready - Smart Healthcare System");
 
     private final String subject;
 

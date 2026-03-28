@@ -1,6 +1,6 @@
 package com.project.adminService.Controller;
 
-
+import com.project.adminService.Exceptions.IllegalRequestException;
 import com.project.adminService.Exceptions.RequestNotFoundException;
 import com.project.adminService.Exceptions.UnAuthorizedException;
 import com.project.adminService.Exceptions.UserAlreadyExistsException;
@@ -15,8 +15,9 @@ import java.util.Date;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
     @ExceptionHandler(RequestNotFoundException.class)
-    public ResponseEntity<ApiExceptionResponseTemplate> handleUserNotFound(RequestNotFoundException ex) {
+    public ResponseEntity<ApiExceptionResponseTemplate> handleRequestNotFound(RequestNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
                 ApiExceptionResponseTemplate.builder().timestamp(new Date()).message(ex.getMessage()).build());
     }
@@ -28,8 +29,14 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(UserAlreadyExistsException.class)
-    public ResponseEntity<ApiExceptionResponseTemplate> handleUserNotFound(UserAlreadyExistsException ex) {
+    public ResponseEntity<ApiExceptionResponseTemplate> handleUserAlreadyExists(UserAlreadyExistsException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                ApiExceptionResponseTemplate.builder().timestamp(new Date()).message(ex.getMessage()).build());
+    }
+
+    @ExceptionHandler(IllegalRequestException.class)
+    public ResponseEntity<ApiExceptionResponseTemplate> handleIllegalRequest(IllegalRequestException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
                 ApiExceptionResponseTemplate.builder().timestamp(new Date()).message(ex.getMessage()).build());
     }
 
@@ -40,7 +47,6 @@ public class GlobalExceptionHandler {
                 .map(err -> err.getField() + " : " + err.getDefaultMessage())
                 .findFirst()
                 .orElse("Validation error");
-
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
                 ApiExceptionResponseTemplate.builder().timestamp(new Date()).message(errorMsg).build());
     }

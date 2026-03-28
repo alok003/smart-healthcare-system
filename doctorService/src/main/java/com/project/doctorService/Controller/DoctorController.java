@@ -1,6 +1,7 @@
 package com.project.doctorService.Controller;
 
 import com.project.doctorService.Exceptions.UnAuthorizedException;
+import com.project.doctorService.Model.AppointmentDto;
 import com.project.doctorService.Model.DoctorDto;
 import com.project.doctorService.Service.DoctorService;
 import com.project.doctorService.Utility.UtilityFunctions;
@@ -24,6 +25,12 @@ public class DoctorController {
         return ResponseEntity.ok(doctorService.saveRequest(doctorDto,maxCount,rate));
     }
 
+    @GetMapping("/getMyDetails")
+    public ResponseEntity<DoctorDto> getMyDetails(@RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException {
+        if(!utilityFunctions.validateRequestDoctor(email, role)) throw new UnAuthorizedException();
+        return ResponseEntity.ok(doctorService.getMyDetails(email));
+    }
+
     @GetMapping("/getAllDoctors")
     public ResponseEntity<List<DoctorDto>> getAllDoctors(@RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException {
         if(!utilityFunctions.validateRequestAdmin(email, role)) throw new UnAuthorizedException();
@@ -34,6 +41,12 @@ public class DoctorController {
     public ResponseEntity<DoctorDto> addLeave(@RequestBody List<LocalDate> leave, @RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException {
         if(!utilityFunctions.validateRequestDoctor(email, role)) throw new UnAuthorizedException();
         return ResponseEntity.ok(doctorService.addLeave(email,leave));
+    }
+
+    @PostMapping("/addDocAppointment")
+    public ResponseEntity<Boolean> addDocAppointment(@RequestBody AppointmentDto appointmentDto, @RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException {
+        if(!utilityFunctions.validateRequestAdmin(email, role)) throw new UnAuthorizedException();
+        return ResponseEntity.ok(doctorService.addDocAppointment(appointmentDto,email));
     }
 
 }

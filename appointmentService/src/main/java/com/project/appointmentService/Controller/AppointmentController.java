@@ -29,9 +29,9 @@ public class AppointmentController {
     }
 
     @DeleteMapping("/cancelAppointment")
-    public ResponseEntity<AppointmentDto> cancelAppointment(String appointmentId, @RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException, AppointmentNotFoundException {
+    public ResponseEntity<AppointmentDto> cancelAppointment(@RequestBody String appointmentId, @RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException, AppointmentNotFoundException {
         if(!utilityFunctions.validateRequestAdmin(email,role))throw new UnAuthorizedException();
-        return ResponseEntity.ok(appointmentService.cancelAppointment(appointmentId));
+        return ResponseEntity.ok(appointmentService.cancelAppointment(appointmentId,email));
     }
 
     @PostMapping("/completeAppointment")
@@ -53,7 +53,7 @@ public class AppointmentController {
     }
 
     @GetMapping("/getAppointmentsByUserId/{userId}")
-    public ResponseEntity<List<AppointmentDto>> getAppointmentsByUserId(@RequestParam String userId, @RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException {
+    public ResponseEntity<List<AppointmentDto>> getAppointmentsByUserId(@PathVariable String userId, @RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException {
         if(!utilityFunctions.validateRequestAdmin(email, role))throw new UnAuthorizedException();
         return ResponseEntity.ok(appointmentService.getAppointmentsByUserId(userId));
     }

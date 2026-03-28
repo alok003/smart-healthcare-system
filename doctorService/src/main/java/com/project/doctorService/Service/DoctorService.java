@@ -1,6 +1,7 @@
 package com.project.doctorService.Service;
 
 import com.project.doctorService.Entity.Doctor;
+import com.project.doctorService.Exceptions.DateOutOfRangeException;
 import com.project.doctorService.Exceptions.DoctorNotFoundException;
 import com.project.doctorService.Model.*;
 import com.project.doctorService.RESTCalls.AppointmentClient;
@@ -63,7 +64,7 @@ public class DoctorService {
 
     public void cancelAppointments(List<String> bookingIds,String email){
         for(String bId:bookingIds){
-            appointmentClient.cancelAppointmentAppointmentClient(email, UserRole.ADMIN.name(),bId);
+            AppointmentDto appointmentDto=appointmentClient.cancelAppointmentAppointmentClient(bId,email, UserRole.ADMIN.name());
         }
     }
 
@@ -73,5 +74,27 @@ public class DoctorService {
                 .stream()
                 .map(doc -> utilityFunctions.cnvEntityToBean(doc))
                 .toList();
+    }
+
+    public Boolean addDocAppointment(AppointmentDto appointmentDto, String email) throws DoctorNotFoundException{
+        Optional<Doctor> doctor=doctorRepository.findByEmail(appointmentDto.getDoctorId());
+        if(doctor.isPresent()){
+            Map<LocalDate,BookingList> newList=doctor.get().getBookings().getBookingListMap();
+            LocalDate appointmentDate=appointmentDto.getDate();
+            if(newList.containsKey(appointmentDate)){
+                newList.get(appointmentDate).getBookingId().add(appointmentDto.getId());
+                Doctor doctorsave=doctor.get();
+                doctorsave.getBookings().setBookingListMap(newList);
+                doctorRepository.save(doctorsave);
+                return true;
+            }else throw new DateOutOfRangeException();
+        }else throw new DoctorNotFoundException();
+    }
+
+    public DoctorDto getMyDetails(String email) {
+        Optional<Doctor> doctor=doctorRepository.findByEmail(email);
+        if(doctor.isPresent()){
+            return utilityFunctions.cnvEntityToBean(doctor.get());
+        }else throw new DoctorNotFoundException();
     }
 }

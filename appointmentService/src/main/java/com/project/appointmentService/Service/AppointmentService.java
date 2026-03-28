@@ -24,11 +24,12 @@ public class AppointmentService {
         return utilityFunctions.cnvEntityToDto(appointmentRepository.save(utilityFunctions.cnvDtoToEntity(appointmentDto, Appointment.class)), AppointmentDto.class);
     }
 
-    public AppointmentDto cancelAppointment(String appointmentId) throws AppointmentNotFoundException {
+    public AppointmentDto cancelAppointment(String appointmentId,String email) throws AppointmentNotFoundException {
         Optional<Appointment> appointmentOptional = appointmentRepository.findById(appointmentId);
         if (appointmentOptional.isPresent()) {
             Appointment appointment = appointmentOptional.get();
             appointment.setStatus(Status.CANCELLED);
+            appointment.setDescription("Appointment cancelled by User: "+email);
             return utilityFunctions.cnvEntityToDto(appointmentRepository.save(appointment), AppointmentDto.class);
         } else {
             throw new AppointmentNotFoundException(appointmentId);

@@ -7,7 +7,10 @@ import org.springframework.mail.javamail.MimeMessagePreparator;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
+import org.xhtmlrenderer.pdf.ITextRenderer;
 
+import java.io.ByteArrayOutputStream;
 import java.util.Map;
 
 @Component
@@ -24,7 +27,7 @@ public class EmailService {
         String role = (String) details.get("role");
         Boolean isPatient = (Boolean) details.get("isPatient");
         
-        org.thymeleaf.context.Context context = new org.thymeleaf.context.Context();
+        Context context = new Context();
         context.setVariable("name", name);
         context.setVariable("email", email);
         context.setVariable("age", age);
@@ -32,18 +35,46 @@ public class EmailService {
         context.setVariable("isPatient", isPatient);
         
         String content = templateEngine.process("welcome-email", context);
-        sendEmail(email, Subjects.WELCOME.getSubject(), content);
+        sendEmail(email, Subjects.WELCOME.getSubject(), content, null, null);
     }
 
-    private void sendEmail(String to,String subject,String content){
+    public void sendAppointmentEmail(Map<String, Object> details) {
+        String patientEmail = (String) details.get("patientId");
+
+        Context emailContext = new Context();
+        emailContext.setVariables(details);
+        String emailContent = templateEngine.process("appointment-email", emailContext);
+
+        Context pdfContext = new Context();
+        pdfContext.setVariables(details);
+        String pdfHtml = templateEngine.process("appointment-pdf", pdfContext);
+        byte[] pdfBytes = generatePdf(pdfHtml);
+
+        sendEmail(patientEmail, Subjects.PRESCRIPTION_READY.getSubject(), emailContent, pdfBytes, "prescription.pdf");
+    }
+
+    private byte[] generatePdf(String html) {
+        try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
+            ITextRenderer renderer = new ITextRenderer();
+            renderer.setDocumentFromString(html);
+            renderer.layout();
+            renderer.createPDF(os);
+            return os.toByteArray();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to generate appointment PDF", e);
+        }
+    }
+
+    private void sendEmail(String to, String subject, String content, byte[] attachment, String attachmentName) {
         MimeMessagePreparator messagePreparator = mimeMessage -> {
-            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage);
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, attachment != null);
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(content, true);
-
+            if (attachment != null) {
+                helper.addAttachment(attachmentName, () -> new java.io.ByteArrayInputStream(attachment));
+            }
         };
         mailSender.send(messagePreparator);
     }
-
 }

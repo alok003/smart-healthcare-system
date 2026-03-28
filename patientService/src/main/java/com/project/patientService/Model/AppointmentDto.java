@@ -1,4 +1,4 @@
-package com.project.appointmentService.Model;
+package com.project.patientService.Model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -25,7 +25,4 @@ public class AppointmentDto {
     private String description;
     private LocalDate date;
     private VisitDetails visitDetails;
-    private Instant createdAt;
-    private Instant updatedAt;
-    private String lastModifiedBy;
 }

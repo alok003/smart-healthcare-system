@@ -77,7 +77,7 @@ public class UserService {
         requestRoleDto.setUserEmail(email);
         requestRoleDto.setUserRole(UserRole.PATIENT);
         kafkaTemplate.send("role-request", UtilityFunction.cnvDtoToMap(requestRoleDto));
-        return "Request for Doctor access sent successfully";
+        return "Request for Patient access sent successfully";
     }
 
     public String changeRole(@Valid ChangeRequest changeRequest) throws UserNotFoundException {

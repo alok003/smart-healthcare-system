@@ -16,4 +16,9 @@ public class KafkaListnerNotification {
     public void listenWelcomeNotification(Map<String,Object> message) {
         emailService.sendWelcomeEmail(message);
     }
+
+    @KafkaListener(topics = "send-email-appointment", groupId = "notification-service-group")
+    public void listenAppointmentNotification(Map<String,Object> message) {
+        emailService.sendAppointmentEmail(message);
+    }
 }

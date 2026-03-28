@@ -1,10 +1,8 @@
-package com.project.patientService.Entity;
+package com.project.patientService.Model;
 
-import com.project.patientService.Model.Gender;
-import com.project.patientService.Model.HealthCheck;
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 
@@ -13,9 +11,9 @@ import java.util.List;
 import java.util.Map;
 
 @Data
-@Document(collection = "Patients")
-public class Patient {
-    @Id
+@AllArgsConstructor
+@RequiredArgsConstructor
+public class PatientDto {
     private String id;
     private String email;
     private String name;

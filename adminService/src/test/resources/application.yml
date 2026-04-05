@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: admin-service-test
+  config:
+    import: "optional:configserver:"
+  cloud:
+    config:
+      enabled: false
+  kafka:
+    bootstrap-servers: localhost:9092
+
+eureka:
+  client:
+    enabled: false

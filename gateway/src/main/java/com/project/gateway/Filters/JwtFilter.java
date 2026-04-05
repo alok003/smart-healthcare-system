@@ -1,7 +1,9 @@
 package com.project.gateway.Filters;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpHeaders;
@@ -12,6 +14,8 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+
+import java.nio.charset.StandardCharsets;
 
 
 @Component
@@ -41,10 +45,10 @@ public class JwtFilter implements GlobalFilter, Ordered {
             try {
                 String token = authHeader.substring(7);
                 Claims claims = Jwts.parser()
-                        .setSigningKey(SECRET_KEY.getBytes())
+                        .verifyWith(Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8)))
                         .build()
-                        .parseClaimsJws(token)
-                        .getBody();
+                        .parseSignedClaims(token)
+                        .getPayload();
 
                 String email = claims.getSubject();
                 String role = claims.get("role", String.class);
@@ -56,7 +60,7 @@ public class JwtFilter implements GlobalFilter, Ordered {
                         .build();
 
                 return chain.filter(exchange.mutate().request(mutatedRequest).build());
-            } catch (Exception e) {
+            } catch (JwtException | IllegalArgumentException e) {
                 return this.onError(exchange, "Invalid JWT token", HttpStatus.UNAUTHORIZED);
             }
         }

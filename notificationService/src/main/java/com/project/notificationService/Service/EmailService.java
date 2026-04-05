@@ -24,16 +24,14 @@ public class EmailService {
         String email = (String) details.get("userEmail");
         String name = (String) details.get("userName");
         Integer age = (Integer) details.get("userAge");
-        String role = (String) details.get("role");
-        Boolean isPatient = (Boolean) details.get("isPatient");
-        
+        String role = (String) details.get("userRole");
+
         Context context = new Context();
         context.setVariable("name", name);
         context.setVariable("email", email);
         context.setVariable("age", age);
         context.setVariable("role", role);
-        context.setVariable("isPatient", isPatient);
-        
+
         String content = templateEngine.process("welcome-email", context);
         sendEmail(email, Subjects.WELCOME.getSubject(), content, null, null);
     }

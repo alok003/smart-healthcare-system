@@ -1,6 +1,5 @@
 package com.project.patientService.Controller;
 
-import com.project.patientService.Exception.PatientAlreadyExistsException;
 import com.project.patientService.Exception.PatientNotFoundException;
 import com.project.patientService.Exception.UnAuthorizedException;
 import com.project.patientService.Model.AppointmentDto;
@@ -23,8 +22,8 @@ public class PatientController {
     private PatientService patientService;
 
     @PostMapping("/savePatient")
-    public ResponseEntity<PatientDto> savePatient(@RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role, @RequestBody PatientDto patientDto) throws UnAuthorizedException, PatientAlreadyExistsException {
-        if(!utilityFunctions.validateRequestPatient(email, role)) throw new UnAuthorizedException();
+    public ResponseEntity<PatientDto> savePatient(@RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role, @RequestBody PatientDto patientDto) throws UnAuthorizedException {
+        if(!utilityFunctions.validateRequestAdmin(email, role)) throw new UnAuthorizedException();
         return ResponseEntity.ok(patientService.savePatient(patientDto));
     }
 

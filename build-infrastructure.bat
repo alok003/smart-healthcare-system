@@ -4,7 +4,7 @@ echo.
 
 echo [1/9] Building Config Server...
 cd configServer
-call mvnw.cmd clean package -DskipTests
+call mvnw.cmd clean package
 if %errorlevel% neq 0 exit /b %errorlevel%
 cd ..
 
@@ -22,13 +22,13 @@ cd ..
 
 echo [4/9] Building User Service...
 cd userService
-call mvnw.cmd clean package -DskipTests
+call mvnw.cmd clean package
 if %errorlevel% neq 0 exit /b %errorlevel%
 cd ..
 
 echo [5/9] Building Admin Service...
 cd adminService
-call mvnw.cmd clean package -DskipTests
+call mvnw.cmd clean package
 if %errorlevel% neq 0 exit /b %errorlevel%
 cd ..
 

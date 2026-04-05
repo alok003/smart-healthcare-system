@@ -3,7 +3,6 @@ package com.project.adminService.Controller;
 import com.project.adminService.Exceptions.IllegalRequestException;
 import com.project.adminService.Exceptions.RequestNotFoundException;
 import com.project.adminService.Exceptions.UnAuthorizedException;
-import com.project.adminService.Exceptions.UserAlreadyExistsException;
 import com.project.adminService.Model.ApiExceptionResponseTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,13 +23,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(UnAuthorizedException.class)
     public ResponseEntity<ApiExceptionResponseTemplate> handleUnAuthorized(UnAuthorizedException ex) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
-                ApiExceptionResponseTemplate.builder().timestamp(new Date()).message(ex.getMessage()).build());
-    }
-
-    @ExceptionHandler(UserAlreadyExistsException.class)
-    public ResponseEntity<ApiExceptionResponseTemplate> handleUserAlreadyExists(UserAlreadyExistsException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
                 ApiExceptionResponseTemplate.builder().timestamp(new Date()).message(ex.getMessage()).build());
     }
 
@@ -49,6 +42,12 @@ public class GlobalExceptionHandler {
                 .orElse("Validation error");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
                 ApiExceptionResponseTemplate.builder().timestamp(new Date()).message(errorMsg).build());
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ApiExceptionResponseTemplate> handleRuntimeException(RuntimeException ex) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(
+                ApiExceptionResponseTemplate.builder().timestamp(new Date()).message(ex.getMessage()).build());
     }
 
     @ExceptionHandler(Exception.class)

@@ -17,6 +17,12 @@ public class KafkaListnerNotification {
 
     @KafkaListener(topics= "role-request" , groupId = "admin-service-group")
     public void listenRoleRequest(Map<String,Object> message) {
-        adminService.saveRequest(UtilityFunctions.cnvMapToDto(message, RequestRoleDto.class));
+        try {
+            System.out.println("Received role-request message: " + message);
+            adminService.saveRequest(UtilityFunctions.cnvMapToDto(message, RequestRoleDto.class));
+            System.out.println("Successfully saved role request for: " + message.get("userEmail"));
+        } catch (Exception e) {
+            System.out.println("Failed to process role-request message: " + e.getMessage());
+        }
     }
 }

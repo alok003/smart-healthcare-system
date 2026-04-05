@@ -1,11 +1,13 @@
 package com.project.userService.Controller;
 
+import com.project.userService.Exceptions.InvalidRequestException;
 import com.project.userService.Exceptions.UnAuthorizedException;
 import com.project.userService.Exceptions.UserAlreadyExistsException;
 import com.project.userService.Exceptions.UserNotFoundException;
 import com.project.userService.Model.ApiExceptionResponseTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -20,9 +22,15 @@ public class GlobalExceptionHandler {
                 ApiExceptionResponseTemplate.builder().timestamp(new Date()).message(ex.getMessage()).build());
     }
 
+    @ExceptionHandler(InvalidRequestException.class)
+    public ResponseEntity<ApiExceptionResponseTemplate> handleInvalidRequest(InvalidRequestException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                ApiExceptionResponseTemplate.builder().timestamp(new Date()).message(ex.getMessage()).build());
+    }
+
     @ExceptionHandler(UnAuthorizedException.class)
     public ResponseEntity<ApiExceptionResponseTemplate> handleUnAuthorized(UnAuthorizedException ex) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
                 ApiExceptionResponseTemplate.builder().timestamp(new Date()).message(ex.getMessage()).build());
     }
 
@@ -42,6 +50,18 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
                 ApiExceptionResponseTemplate.builder().timestamp(new Date()).message(errorMsg).build());
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ApiExceptionResponseTemplate> handleBadCredentials(BadCredentialsException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                ApiExceptionResponseTemplate.builder().timestamp(new Date()).message("Invalid email or password.").build());
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ApiExceptionResponseTemplate> handleRuntimeException(RuntimeException ex) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(
+                ApiExceptionResponseTemplate.builder().timestamp(new Date()).message(ex.getMessage()).build());
     }
 
     @ExceptionHandler(Exception.class)

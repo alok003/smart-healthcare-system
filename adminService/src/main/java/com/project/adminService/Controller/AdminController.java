@@ -1,11 +1,13 @@
 package com.project.adminService.Controller;
 
+import com.project.adminService.Exceptions.IllegalRequestException;
 import com.project.adminService.Exceptions.RequestNotFoundException;
 import com.project.adminService.Exceptions.UnAuthorizedException;
 import com.project.adminService.Model.RequestRoleDto;
 import com.project.adminService.Service.AdminService;
 import com.project.adminService.Utility.UtilityFunctions;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,37 +22,32 @@ public class AdminController {
 
     @GetMapping("/getAllRequests")
     public ResponseEntity<List<RequestRoleDto>> getAllActiveRequests(@RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException {
-        if(!utilityFunctions.validateRequestAdmin(email, role)) throw new UnAuthorizedException();
-        return ResponseEntity.ok(adminService.getAllActiveRequests());
+        if(!utilityFunctions.validateRequestAdmin(email, role)) throw new UnAuthorizedException(email);
+        return ResponseEntity.status(HttpStatus.OK).body(adminService.getAllActiveRequests());
     }
 
-    @PostMapping("/saveRequest")
-    public ResponseEntity<RequestRoleDto> saveRequest(@RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role,@RequestBody RequestRoleDto requestRoleDto) throws UnAuthorizedException {
-        if(!utilityFunctions.validateRequestAdmin(email, role)) throw new UnAuthorizedException();
-        return ResponseEntity.ok(adminService.saveRequest(requestRoleDto));
+    @PutMapping("/declineRequest/{id}")
+    public ResponseEntity<String> declineRequest(@RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role, @PathVariable String id) throws UnAuthorizedException, RequestNotFoundException, IllegalRequestException {
+        if(!utilityFunctions.validateRequestAdmin(email, role)) throw new UnAuthorizedException(email);
+        return ResponseEntity.status(HttpStatus.OK).body(adminService.declineRequest(id));
     }
 
-    @DeleteMapping("/deleteRequest/{id}")
-    public ResponseEntity<String> deleteRequest(@RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role,@PathVariable String id) throws UnAuthorizedException, RequestNotFoundException {
-        if(!utilityFunctions.validateRequestAdmin(email, role)) throw new UnAuthorizedException();
-        return ResponseEntity.ok(adminService.declineRequest(id));
+    @PutMapping("/approve/{id}")
+    public ResponseEntity<String> approveRequest(@RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role, @PathVariable String id, @RequestParam(defaultValue = "4") Integer maxCount, @RequestParam(defaultValue = "300") Double rate) throws UnAuthorizedException, RequestNotFoundException, IllegalRequestException {
+        if (!utilityFunctions.validateRequestAdmin(email, role)) throw new UnAuthorizedException(email);
+        return ResponseEntity.status(HttpStatus.OK).body(adminService.approveRequest(id, email, maxCount, rate));
     }
 
-    @GetMapping("/approve/{id}")
-    public ResponseEntity<String> approveRequest(@RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role,@PathVariable String id,@RequestParam(required = false) int maxCount,@RequestParam(required = false) double rate) throws UnAuthorizedException, RequestNotFoundException {
-        if (!utilityFunctions.validateRequestAdmin(email, role)) throw new UnAuthorizedException();
-        return ResponseEntity.ok(adminService.approveRequest(id,email,maxCount,rate));
-    }
-
-    @GetMapping("/approve/patients")
-    public ResponseEntity<Void> approvePatientRequest(@RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException, RequestNotFoundException {
-        if (!utilityFunctions.validateRequestAdmin(email, role)) throw new UnAuthorizedException();
-        return ResponseEntity.ok(adminService.approvePatientRequest());
+    @PostMapping("/approve/patients")
+    public ResponseEntity<Void> approvePatientRequest(@RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException {
+        if (!utilityFunctions.validateRequestAdmin(email, role)) throw new UnAuthorizedException(email);
+        adminService.approvePatientRequest();
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
     @GetMapping("/checkStatus")
-    public ResponseEntity<RequestRoleDto> checkStatus(@RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException, RequestNotFoundException {
-        if (!utilityFunctions.validateRequestAdmin(email, role)) throw new UnAuthorizedException();
-        return ResponseEntity.ok(adminService.checkStatus(email));
+    public ResponseEntity<RequestRoleDto> checkStatus(@RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role, @RequestParam String userEmail) throws UnAuthorizedException, RequestNotFoundException {
+        if (!utilityFunctions.validateRequestAdmin(email, role)) throw new UnAuthorizedException(email);
+        return ResponseEntity.status(HttpStatus.OK).body(adminService.checkStatus(userEmail));
     }
 }

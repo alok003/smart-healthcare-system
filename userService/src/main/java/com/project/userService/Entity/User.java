@@ -20,7 +20,7 @@ public class User {
     @Column(nullable = false)
     private String userPassword;
     private String userName;
-    private int userAge;
+    private Integer userAge;
     @Enumerated(EnumType.STRING)
     private UserRole userRole;
     @CreationTimestamp

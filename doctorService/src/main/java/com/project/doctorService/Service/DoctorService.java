@@ -23,16 +23,22 @@ public class DoctorService {
     private AppointmentClient appointmentClient;
 
     public DoctorDto saveRequest(DoctorDto doctorDto, int maxCount, double rate) {
+        System.out.println("saveDoctor called for email: " + doctorDto.getEmail());
         Optional<Doctor> doctor=doctorRepository.findByEmail(doctorDto.getEmail());
         if(doctor.isEmpty()){
+            System.out.println("New doctor, saving to DB: " + doctorDto.getEmail());
             Bookings bookings = new Bookings();
             bookings.setBookingListMap(setInitialBookingTemplate());
             bookings.setRate(rate);
             bookings.setMaxCount(maxCount);
             doctorDto.setBookings(bookings);
             Doctor saved=doctorRepository.save(utilityFunctions.cnvBeanToEntity(doctorDto));
+            System.out.println("Doctor saved with id: " + saved.getId());
             return utilityFunctions.cnvEntityToBean(saved);
-        }else return utilityFunctions.cnvEntityToBean(doctor.get());
+        }else {
+            System.out.println("Doctor already exists for email: " + doctorDto.getEmail() + ", skipping save");
+            return utilityFunctions.cnvEntityToBean(doctor.get());
+        }
     }
     private Map<LocalDate, BookingList> setInitialBookingTemplate(){
         Map<LocalDate,BookingList> bookingListMap=new HashMap<>();
@@ -46,6 +52,7 @@ public class DoctorService {
     }
 
     public DoctorDto addLeave(String email, List<LocalDate> leave) throws DoctorNotFoundException {
+        System.out.println("addLeave called for: " + email + ", days: " + leave);
         Optional<Doctor> doctor=doctorRepository.findByEmail(email);
         if(doctor.isPresent()){
             Map<LocalDate,BookingList> newList=doctor.get().getBookings().getBookingListMap();
@@ -77,6 +84,7 @@ public class DoctorService {
     }
 
     public Boolean addDocAppointment(AppointmentDto appointmentDto, String email) throws DoctorNotFoundException{
+        System.out.println("addDocAppointment called for doctor: " + appointmentDto.getDoctorId() + ", appointment: " + appointmentDto.getId());
         Optional<Doctor> doctor=doctorRepository.findByEmail(appointmentDto.getDoctorId());
         if(doctor.isPresent()){
             Map<LocalDate,BookingList> newList=doctor.get().getBookings().getBookingListMap();

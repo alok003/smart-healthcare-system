@@ -1,9 +1,11 @@
 package com.project.userService.Utility;
 
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.userService.Entity.User;
-import com.project.userService.Model.RequestRoleDto;
 import com.project.userService.Model.UserModel;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -14,7 +16,9 @@ import java.util.Objects;
 @Service
 public class UtilityFunction {
 
-    private static final ObjectMapper objectMapper=new ObjectMapper();
+    private static final ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
     public User cnvBeanToEntity(UserModel userModel) {
         User user = new User();
@@ -41,7 +45,7 @@ public class UtilityFunction {
     }
 
     public Boolean validateRequestUser(String email,String role){
-        return Objects.equals(role, "USER")&&validateEmail(email);
+        return (Objects.equals(role, "USER") || Objects.equals(role, "DOCTOR") || Objects.equals(role, "PATIENT")) && validateEmail(email);
     }
 
     public static <T> Map<String, Object> cnvDtoToMap(T dto) {

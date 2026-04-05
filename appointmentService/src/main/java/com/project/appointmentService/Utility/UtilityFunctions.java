@@ -1,5 +1,7 @@
 package com.project.appointmentService.Utility;
 
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.appointmentService.Entity.Appointment;
@@ -13,7 +15,9 @@ import java.util.Objects;
 @Service
 public class UtilityFunctions {
 
-    private static final ObjectMapper objectMapper=new ObjectMapper();
+    private static final ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
     public Boolean validateRequestAdmin(String email, String role) {
         return Objects.equals(role, "ADMIN") && validateEmail(email);

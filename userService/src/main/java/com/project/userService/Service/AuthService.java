@@ -17,8 +17,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import javax.validation.Valid;
-import java.util.HashMap;
 import java.util.Map;
 
 @Service
@@ -32,31 +30,36 @@ public class AuthService {
     private final KafkaTemplate<String, Map<String, Object>> kafkaTemplate;
 
     public AuthResponse login(LoginRequest request) throws UserNotFoundException {
+        System.out.println("Login attempt for: " + request.getUserEmail());
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken
                 (request.getUserEmail(), request.getUserPassword()));
         User user = userRepository.findByUserEmail(request.getUserEmail())
-                .orElseThrow(UserNotFoundException::new);
+                .orElseThrow(() -> new UserNotFoundException(request.getUserEmail()));
         String token = jwtUtil.generateToken(user.getUserEmail(), user.getUserRole().name());
+        System.out.println("Login successful for: " + request.getUserEmail());
         return AuthResponse.builder().token(token).expiration(jwtUtil.extractExpiration(token)).build();
     }
 
-    public UserModel addNewUser(@Valid UserModel userModel) throws UserAlreadyExistsException {
+    public UserModel addNewUser(UserModel userModel) throws UserAlreadyExistsException {
+        System.out.println("Registering new user: " + userModel.getUserEmail());
         if (userRepository.existsByUserEmail(userModel.getUserEmail())) {
-            throw new UserAlreadyExistsException();
+            throw new UserAlreadyExistsException(userModel.getUserEmail());
         }
         User user = utilityFunction.cnvBeanToEntity(userModel);
         user.setUserPassword(passwordEncoder.encode(user.getUserPassword()));
         user.setUserRole(UserRole.USER);
         User save = userRepository.save(user);
-        
-        Map<String, Object> emailData = new HashMap<>();
-        emailData.put("userEmail", save.getUserEmail());
-        emailData.put("userName", save.getUserName());
-        emailData.put("userAge", save.getUserAge());
-        emailData.put("role", save.getUserRole().name());
-        kafkaTemplate.send("welcome-notification", emailData);
-        
-        return utilityFunction.cnvEntityToBean(save);
+        UserModel result = utilityFunction.cnvEntityToBean(save);
+        result.setUserPassword(null);
+        try {
+            kafkaTemplate.send("welcome-notification", UtilityFunction.cnvDtoToMap(result)).get();
+            System.out.println("Welcome notification sent for: " + userModel.getUserEmail());
+        } catch (Exception e) {
+            System.out.println("Welcome notification failed for: " + userModel.getUserEmail() + ", rolling back. Error: " + e.getMessage());
+            userRepository.delete(save);
+            throw new RuntimeException("Registration failed due to notification service being unavailable. Please try again.");
+        }
+        return result;
     }
 
 }

@@ -1,6 +1,7 @@
 package com.project.userService.Service;
 
 import com.project.userService.Entity.User;
+import com.project.userService.Exceptions.InvalidRequestException;
 import com.project.userService.Exceptions.UserNotFoundException;
 import com.project.userService.Model.ChangeRequest;
 import com.project.userService.Model.RequestRoleDto;
@@ -14,9 +15,9 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import javax.validation.Valid;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import java.util.Map;
-import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -30,13 +31,13 @@ public class UserService {
 
     public UserModel findById(String userId) throws UserNotFoundException {
         User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
+                .orElseThrow(() -> new UserNotFoundException(userId));
         return utilityFunction.cnvEntityToBean(user);
     }
 
     public UserModel findByEmailId(String emailId) throws UserNotFoundException {
         User user = userRepository.findByUserEmail(emailId)
-                .orElseThrow(UserNotFoundException::new);
+                .orElseThrow(() -> new UserNotFoundException(emailId));
         return utilityFunction.cnvEntityToBean(user);
     }
 
@@ -48,47 +49,80 @@ public class UserService {
         return userRepository.existsByUserEmail(emailId);
     }
 
-    public UserModel updateByEmail(@Valid UserModel userModel, String email) throws UserNotFoundException {
+    public UserModel updateByEmail(UserModel userModel, String email) throws UserNotFoundException {
         if (userRepository.existsByUserEmail(email)) {
-            User user = userRepository.findByUserEmail(userModel.getUserEmail()).get();
+            User user = userRepository.findByUserEmail(email)
+                    .orElseThrow(() -> new UserNotFoundException(email));
             user.setUserName(userModel.getUserName());
             user.setUserPassword(passwordEncoder.encode(userModel.getUserPassword()));
             user.setUserAge(userModel.getUserAge());
             User save = userRepository.save(user);
             return utilityFunction.cnvEntityToBean(save);
-        } else throw new UserNotFoundException();
+        } else throw new UserNotFoundException(email);
     }
 
-    public String requestAdminAccess(@Valid RequestRoleDto requestRoleDto, String email, String role) {
+    public String requestAdminAccess(RequestRoleDto requestRoleDto, String email, String role) {
+        System.out.println("Admin access request from: " + email);
         requestRoleDto.setUserEmail(email);
         requestRoleDto.setUserRole(UserRole.ADMIN);
-        kafkaTemplate.send("role-request", UtilityFunction.cnvDtoToMap(requestRoleDto));
+        try {
+            kafkaTemplate.send("role-request", UtilityFunction.cnvDtoToMap(requestRoleDto)).get();
+            System.out.println("Admin access request sent to Kafka for: " + email);
+        } catch (Exception e) {
+            System.out.println("Kafka send failed for admin request: " + email + ". Error: " + e.getMessage());
+            throw new RuntimeException("Request failed, please try again later.");
+        }
         return "Request for Admin access sent successfully";
     }
 
-    public String requestDoctorAccess(@Valid RequestRoleDto requestRoleDto, String email, String role) {
+    public String requestDoctorAccess(RequestRoleDto requestRoleDto, String email, String role) throws InvalidRequestException {
+        if (requestRoleDto.getDoctorDto() == null) throw new InvalidRequestException("doctorDto is required for Doctor access request");
+        System.out.println("Doctor access request from: " + email);
         requestRoleDto.setUserEmail(email);
         requestRoleDto.setUserRole(UserRole.DOCTOR);
-        kafkaTemplate.send("role-request", UtilityFunction.cnvDtoToMap(requestRoleDto));
+        requestRoleDto.getDoctorDto().setEmail(email);
+        try {
+            kafkaTemplate.send("role-request", UtilityFunction.cnvDtoToMap(requestRoleDto)).get();
+            System.out.println("Doctor access request sent to Kafka for: " + email);
+        } catch (Exception e) {
+            System.out.println("Kafka send failed for doctor request: " + email + ". Error: " + e.getMessage());
+            throw new RuntimeException("Request failed, please try again later.");
+        }
         return "Request for Doctor access sent successfully";
     }
 
-    public String requestPatientAccess(@Valid RequestRoleDto requestRoleDto, String email, String role) {
+    public String requestPatientAccess(RequestRoleDto requestRoleDto, String email, String role) throws InvalidRequestException, UserNotFoundException {
+        if (requestRoleDto.getPatientDto() == null) throw new InvalidRequestException("patientDto is required for Patient access request");
+        System.out.println("Patient access request from: " + email);
         requestRoleDto.setUserEmail(email);
         requestRoleDto.setUserRole(UserRole.PATIENT);
-        kafkaTemplate.send("role-request", UtilityFunction.cnvDtoToMap(requestRoleDto));
+        requestRoleDto.getPatientDto().setEmail(email);
+        requestRoleDto.getPatientDto().setName(findByEmailId(email).getUserName());
+        try {
+            kafkaTemplate.send("role-request", UtilityFunction.cnvDtoToMap(requestRoleDto)).get();
+            System.out.println("Patient access request sent to Kafka for: " + email);
+        } catch (Exception e) {
+            System.out.println("Kafka send failed for patient request: " + email + ". Error: " + e.getMessage());
+            throw new RuntimeException("Request failed, please try again later.");
+        }
         return "Request for Patient access sent successfully";
     }
 
-    public String changeRole(@Valid ChangeRequest changeRequest) throws UserNotFoundException {
+    public String changeRole(ChangeRequest changeRequest) throws UserNotFoundException {
         User user = userRepository.findByUserEmail(changeRequest.getEmail())
-                .orElseThrow(UserNotFoundException::new);
+                .orElseThrow(() -> new UserNotFoundException(changeRequest.getEmail()));
         user.setUserRole(changeRequest.getRole());
         user = userRepository.save(user);
         return changeRequest.getEmail();
     }
 
+    @CircuitBreaker(name = "adminService", fallbackMethod = "checkStatusFallback")
+    @Retry(name = "adminService")
     public RequestRoleDto checkStatus(String email) {
-        return adminClient.checkStatusViaEmail(email,UserRole.ADMIN.name());
+        return adminClient.checkStatusViaEmail(email, UserRole.ADMIN.name(), email);
+    }
+
+    private RequestRoleDto checkStatusFallback(String email, Exception e) {
+        throw new RuntimeException("Admin service unavailable, unable to fetch status for: " + email);
     }
 }

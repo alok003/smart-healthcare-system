@@ -3,7 +3,7 @@ package com.project.userService.Controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.userService.Entity.User;
 import com.project.userService.Model.*;
-import com.project.userService.RESTCalls.AdminClient;
+import com.project.userService.Service.ExternalServiceClient;
 import com.project.userService.Repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +14,8 @@ import org.springframework.http.MediaType;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
+
+import org.springframework.messaging.Message;
 
 import java.util.Map;
 import java.util.Optional;
@@ -44,7 +46,7 @@ class UserControllerTest {
     private KafkaTemplate<String, Map<String, Object>> kafkaTemplate;
 
     @MockitoBean
-    private AdminClient adminClient;
+    private ExternalServiceClient externalServiceClient;
 
     private static final String ADMIN_EMAIL = "admin@example.com";
     private static final String ADMIN_ROLE = "ADMIN";
@@ -231,7 +233,7 @@ class UserControllerTest {
 
     @Test
     void requestAdminAccess_success() throws Exception {
-        when(kafkaTemplate.send(eq("role-request"), any(Map.class)))
+        when(kafkaTemplate.send(any(Message.class)))
                 .thenReturn(CompletableFuture.completedFuture(null));
 
         mockMvc.perform(post("/api/user-service/secure/requestAdminAccess")
@@ -255,7 +257,7 @@ class UserControllerTest {
 
     @Test
     void requestAdminAccess_kafkaFailure_returns503() throws Exception {
-        when(kafkaTemplate.send(eq("role-request"), any(Map.class)))
+        when(kafkaTemplate.send(any(Message.class)))
                 .thenReturn(CompletableFuture.failedFuture(new RuntimeException("Kafka down")));
 
         mockMvc.perform(post("/api/user-service/secure/requestAdminAccess")
@@ -270,7 +272,7 @@ class UserControllerTest {
 
     @Test
     void requestDoctorAccess_success() throws Exception {
-        when(kafkaTemplate.send(eq("role-request"), any(Map.class)))
+        when(kafkaTemplate.send(any(Message.class)))
                 .thenReturn(CompletableFuture.completedFuture(null));
 
         RequestRoleDto dto = new RequestRoleDto();
@@ -301,7 +303,7 @@ class UserControllerTest {
     void requestPatientAccess_success() throws Exception {
         User user = buildUser(USER_EMAIL, UserRole.USER);
         when(userRepository.findByUserEmail(USER_EMAIL)).thenReturn(Optional.of(user));
-        when(kafkaTemplate.send(eq("role-request"), any(Map.class)))
+        when(kafkaTemplate.send(any(Message.class)))
                 .thenReturn(CompletableFuture.completedFuture(null));
 
         RequestRoleDto dto = new RequestRoleDto();
@@ -371,7 +373,7 @@ class UserControllerTest {
         dto.setUserEmail(USER_EMAIL);
         dto.setRequestStatus(Status.PENDING);
 
-        when(adminClient.checkStatusViaEmail(USER_EMAIL, UserRole.ADMIN.name(), USER_EMAIL)).thenReturn(dto);
+        when(externalServiceClient.checkStatus(USER_EMAIL)).thenReturn(dto);
 
         mockMvc.perform(get("/api/user-service/secure/checkStatus")
                         .header("X-User-Email", USER_EMAIL)

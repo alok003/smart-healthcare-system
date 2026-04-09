@@ -163,7 +163,6 @@
                         <exclude>com/project/userService/Model/**</exclude>
                         <exclude>com/project/userService/Exceptions/**</exclude>
                         <exclude>com/project/userService/Utility/JWTUtil.class</exclude>
-                        <exclude>com/project/userService/Utility/UtilityFunction.class</exclude>
                         <exclude>com/project/userService/RESTCalls/**</exclude>
                     </excludes>
                 </configuration>

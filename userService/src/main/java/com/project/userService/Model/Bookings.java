@@ -13,6 +13,6 @@ import java.util.Map;
 @AllArgsConstructor
 public class Bookings {
     private int maxCount;
-    private int rate;
+    private double rate;
     private Map<LocalDate, BookingList> bookingListMap;
 }

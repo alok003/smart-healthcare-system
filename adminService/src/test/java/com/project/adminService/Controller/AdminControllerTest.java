@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.project.adminService.Entity.RequestRole;
 import com.project.adminService.Model.*;
-import com.project.adminService.RESTCalls.UserClient;
 import com.project.adminService.Repository.AdminRepository;
 import com.project.adminService.Service.ExternalServiceClient;
 import org.junit.jupiter.api.Test;
@@ -36,9 +35,6 @@ class AdminControllerTest {
 
     @MockitoBean
     private ExternalServiceClient externalServiceClient;
-
-    @MockitoBean
-    private UserClient userClient;
 
     private final ObjectMapper objectMapper = new ObjectMapper()
             .registerModule(new JavaTimeModule());

@@ -16,6 +16,8 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
+import org.springframework.messaging.Message;
+
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -147,7 +149,7 @@ class AuthControllerTest {
     void addNewUser_success() throws Exception {
         when(userRepository.existsByUserEmail("new@example.com")).thenReturn(false);
         when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(kafkaTemplate.send(eq("welcome-notification"), any(Map.class)))
+        when(kafkaTemplate.send(any(Message.class)))
                 .thenReturn(CompletableFuture.completedFuture(null));
 
         UserModel userModel = new UserModel();
@@ -185,7 +187,7 @@ class AuthControllerTest {
         User saved = buildUser("new@example.com", "password123");
         when(userRepository.existsByUserEmail("new@example.com")).thenReturn(false);
         when(userRepository.save(any(User.class))).thenReturn(saved);
-        when(kafkaTemplate.send(eq("welcome-notification"), any(Map.class)))
+        when(kafkaTemplate.send(any(Message.class)))
                 .thenReturn(CompletableFuture.failedFuture(new RuntimeException("Kafka down")));
 
         UserModel userModel = new UserModel();

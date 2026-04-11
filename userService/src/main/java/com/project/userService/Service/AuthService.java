@@ -10,7 +10,7 @@ import com.project.userService.Model.UserRole;
 import com.project.userService.Repository.UserRepository;
 import com.project.userService.Utility.JWTUtil;
 import com.project.userService.Utility.LogUtil;
-import com.project.userService.Utility.UtilityFunction;
+import com.project.userService.Utility.UtilityFunctions;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +33,7 @@ public class AuthService {
 
     private UserRepository userRepository;
     private PasswordEncoder passwordEncoder;
-    private UtilityFunction utilityFunction;
+    private UtilityFunctions utilityFunction;
     private final JWTUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
     private final KafkaTemplate<String, Map<String, Object>> kafkaTemplate;
@@ -63,7 +63,7 @@ public class AuthService {
         log.info("action=KAFKA_PUBLISH status=INITIATED topic=welcome-notification identifier={} payload={}", userModel.getUserEmail(), LogUtil.toJson(result));
         try {
             kafkaTemplate.send(MessageBuilder
-                    .withPayload(UtilityFunction.cnvDtoToMap(result))
+                    .withPayload(UtilityFunctions.cnvDtoToMap(result))
                     .setHeader(KafkaHeaders.TOPIC, "welcome-notification")
                     .setHeader("X-Correlation-ID", MDC.get("correlationId"))
                     .build()).get();

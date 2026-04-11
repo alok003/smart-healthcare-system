@@ -1,4 +1,4 @@
-package com.project.patientService.Exception;
+package com.project.appointmentService.Exceptions;
 
 public class UnAuthorizedException extends Exception {
     public UnAuthorizedException() {

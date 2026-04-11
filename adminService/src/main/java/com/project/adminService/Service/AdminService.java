@@ -10,9 +10,14 @@ import com.project.adminService.Utility.UtilityFunctions;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -24,6 +29,7 @@ public class AdminService {
     private AdminRepository adminRepository;
     private UtilityFunctions utilityFunctions;
     private ExternalServiceClient externalServiceClient;
+    private KafkaTemplate<String, Map<String, Object>> kafkaTemplate;
     private static final String SYSTEM_EMAIL = "system@shs.com";
 
     public List<RequestRoleDto> getAllActiveRequests() {
@@ -73,6 +79,10 @@ public class AdminService {
         RequestRole request = requestRole.get();
         request.setRequestStatus(Status.DISCARDED);
         String savedId = adminRepository.save(request).getId();
+        kafkaTemplate.send(MessageBuilder.withPayload(Map.of("userEmail", request.getUserEmail(), "userRole", request.getUserRole().name()))
+                .setHeader(KafkaHeaders.TOPIC, "role-declined")
+                .setHeader("X-Correlation-ID", MDC.get("correlationId"))
+                .build());
         log.info("action=DECLINE_REQUEST status=SUCCESS id={} identifier={}", savedId, request.getUserEmail());
         return savedId;
     }
@@ -109,6 +119,10 @@ public class AdminService {
 
         request.setRequestStatus(Status.APPROVED);
         String savedId = adminRepository.save(request).getId();
+        kafkaTemplate.send(MessageBuilder.withPayload(Map.of("userEmail", request.getUserEmail(), "userRole", request.getUserRole().name()))
+                .setHeader(KafkaHeaders.TOPIC, "role-approved")
+                .setHeader("X-Correlation-ID", MDC.get("correlationId"))
+                .build());
         log.info("action=APPROVE_REQUEST status=SUCCESS id={} identifier={} role={} requestedBy={}", savedId, request.getUserEmail(), request.getUserRole(), email);
         return savedId;
     }
@@ -125,6 +139,10 @@ public class AdminService {
                 externalServiceClient.savePatientProfile(request.getPatientDto(), SYSTEM_EMAIL);
                 request.setRequestStatus(Status.APPROVED);
                 adminRepository.save(request);
+                kafkaTemplate.send(MessageBuilder.withPayload(Map.of("userEmail", request.getUserEmail(), "userRole", request.getUserRole().name()))
+                        .setHeader(KafkaHeaders.TOPIC, "role-approved")
+                        .setHeader("X-Correlation-ID", MDC.get("correlationId"))
+                        .build());
                 log.info("action=BULK_APPROVE_PATIENTS status=SUCCESS identifier={}", request.getUserEmail());
             } catch (Exception e) {
                 log.error("action=BULK_APPROVE_PATIENTS status=FAILED identifier={} reason=PROFILE_SAVE_FAILED detail=Role change reverted error={}", request.getUserEmail(), e.getMessage());

@@ -3,11 +3,14 @@ package com.project.patientService.Entity;
 import com.project.patientService.Model.Gender;
 import com.project.patientService.Model.HealthCheck;
 import lombok.Data;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -24,4 +27,8 @@ public class Patient {
     private Gender gender;
     private List<String> appointmentList;
     private Map<LocalDate, HealthCheck> vitalsFlow;
+    @CreatedDate
+    private Instant createdAt;
+    @LastModifiedDate
+    private Instant updatedAt;
 }

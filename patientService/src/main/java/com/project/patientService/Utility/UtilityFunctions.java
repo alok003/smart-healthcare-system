@@ -9,6 +9,8 @@ import com.project.patientService.Model.PatientDto;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -28,8 +30,8 @@ public class UtilityFunctions {
         return Objects.equals(role, "PATIENT") && validateEmail(email);
     }
 
-    public static <T> Map<String, Object> cnvDtoToMap(T dto) {
-        return objectMapper.convertValue(dto, new TypeReference<Map<String, Object>>() {});
+    public static Map<String, Object> cnvDtoToMap(Object obj) {
+        return objectMapper.convertValue(obj, new TypeReference<Map<String, Object>>() {});
     }
 
     public static <T> T cnvMapToDto(Map<String, Object> map, Class<T> clazz) {
@@ -43,6 +45,8 @@ public class UtilityFunctions {
     public Patient convertToPatient(PatientDto patientDto) {
         Patient patient = new Patient();
         BeanUtils.copyProperties(patientDto, patient);
+        if (patient.getAppointmentList() == null) patient.setAppointmentList(new ArrayList<>());
+        if (patient.getVitalsFlow() == null) patient.setVitalsFlow(new HashMap<>());
         return patient;
     }
 

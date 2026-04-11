@@ -23,20 +23,24 @@ public class UtilityFunctions {
         return Objects.equals(role, "ADMIN") && validateEmail(email);
     }
 
-    public AppointmentDto cnvEntityToDto(Object entity, Class<AppointmentDto> clazz) {
+    public Boolean validateRequestAdminOrPatient(String email, String role) {
+        return (Objects.equals(role, "ADMIN") || Objects.equals(role, "PATIENT")) && validateEmail(email);
+    }
+
+    public AppointmentDto cnvEntityToDto(Object entity) {
         AppointmentDto appointmentDto = new AppointmentDto();
         BeanUtils.copyProperties(entity, appointmentDto);
         return appointmentDto;
     }
 
-    public Appointment cnvDtoToEntity(AppointmentDto appointmentDto, Class<Appointment> clazz) {
+    public Appointment cnvDtoToEntity(AppointmentDto appointmentDto) {
         Appointment appointment = new Appointment();
         BeanUtils.copyProperties(appointmentDto, appointment);
         return appointment;
     }
 
-    public static <T> Map<String, Object> cnvDtoToMap(T dto) {
-        return objectMapper.convertValue(dto, new TypeReference<Map<String, Object>>() {});
+    public static Map<String, Object> cnvDtoToMap(Object obj) {
+        return objectMapper.convertValue(obj, new TypeReference<Map<String, Object>>() {});
     }
 
     public static <T> T cnvMapToDto(Map<String, Object> map, Class<T> clazz) {

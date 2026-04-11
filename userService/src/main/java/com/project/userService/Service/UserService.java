@@ -9,7 +9,7 @@ import com.project.userService.Model.UserModel;
 import com.project.userService.Model.UserRole;
 import com.project.userService.Repository.UserRepository;
 import com.project.userService.Utility.LogUtil;
-import com.project.userService.Utility.UtilityFunction;
+import com.project.userService.Utility.UtilityFunctions;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +30,7 @@ public class UserService {
 
     private UserRepository userRepository;
     private PasswordEncoder passwordEncoder;
-    private UtilityFunction utilityFunction;
+    private UtilityFunctions utilityFunction;
     private ExternalServiceClient externalServiceClient;
     private KafkaTemplate<String, Map<String, Object>> kafkaTemplate;
 
@@ -73,7 +73,7 @@ public class UserService {
         log.info("action=KAFKA_PUBLISH status=INITIATED topic=role-request identifier={} payload={}", email, LogUtil.toJson(requestRoleDto));
         try {
             kafkaTemplate.send(MessageBuilder
-                    .withPayload(UtilityFunction.cnvDtoToMap(requestRoleDto))
+                    .withPayload(UtilityFunctions.cnvDtoToMap(requestRoleDto))
                     .setHeader(KafkaHeaders.TOPIC, "role-request")
                     .setHeader("X-Correlation-ID", MDC.get("correlationId"))
                     .build()).get();
@@ -98,7 +98,7 @@ public class UserService {
         log.info("action=KAFKA_PUBLISH status=INITIATED topic=role-request identifier={} payload={}", email, LogUtil.toJson(requestRoleDto));
         try {
             kafkaTemplate.send(MessageBuilder
-                    .withPayload(UtilityFunction.cnvDtoToMap(requestRoleDto))
+                    .withPayload(UtilityFunctions.cnvDtoToMap(requestRoleDto))
                     .setHeader(KafkaHeaders.TOPIC, "role-request")
                     .setHeader("X-Correlation-ID", MDC.get("correlationId"))
                     .build()).get();
@@ -124,7 +124,7 @@ public class UserService {
         log.info("action=KAFKA_PUBLISH status=INITIATED topic=role-request identifier={} payload={}", email, LogUtil.toJson(requestRoleDto));
         try {
             kafkaTemplate.send(MessageBuilder
-                    .withPayload(UtilityFunction.cnvDtoToMap(requestRoleDto))
+                    .withPayload(UtilityFunctions.cnvDtoToMap(requestRoleDto))
                     .setHeader(KafkaHeaders.TOPIC, "role-request")
                     .setHeader("X-Correlation-ID", MDC.get("correlationId"))
                     .build()).get();

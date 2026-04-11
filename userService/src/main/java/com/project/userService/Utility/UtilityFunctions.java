@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.Objects;
 
 @Service
-public class UtilityFunction {
+public class UtilityFunctions {
 
     private static final ObjectMapper objectMapper = new ObjectMapper()
             .registerModule(new JavaTimeModule())
@@ -32,19 +32,19 @@ public class UtilityFunction {
         return userModel;
     }
 
-    public Boolean validateRequestAdmin(String email,String role){
-        return Objects.equals(role, "ADMIN")&&validateEmail(email);
+    public Boolean validateRequestAdmin(String email, String role) {
+        return Objects.equals(role, "ADMIN") && validateEmail(email);
     }
 
-    public Boolean validateRequestDoctor(String email,String role){
-        return Objects.equals(role, "DOCTOR")&&validateEmail(email);
+    public Boolean validateRequestDoctor(String email, String role) {
+        return Objects.equals(role, "DOCTOR") && validateEmail(email);
     }
 
-    public Boolean validateRequestPatient(String email,String role){
-        return Objects.equals(role, "PATIENT")&&validateEmail(email);
+    public Boolean validateRequestPatient(String email, String role) {
+        return Objects.equals(role, "PATIENT") && validateEmail(email);
     }
 
-    public Boolean validateRequestUser(String email,String role){
+    public Boolean validateRequestUser(String email, String role) {
         return (Objects.equals(role, "USER") || Objects.equals(role, "DOCTOR") || Objects.equals(role, "PATIENT")) && validateEmail(email);
     }
 

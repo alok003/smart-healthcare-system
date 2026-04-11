@@ -8,7 +8,7 @@ import com.project.userService.Model.RequestRoleDto;
 import com.project.userService.Model.UserModel;
 import com.project.userService.Service.UserService;
 import com.project.userService.Utility.LogUtil;
-import com.project.userService.Utility.UtilityFunction;
+import com.project.userService.Utility.UtilityFunctions;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
@@ -24,7 +24,7 @@ public class UserController {
 
     private static final Logger log = LoggerFactory.getLogger(UserController.class);
     private UserService userService;
-    private UtilityFunction utilityFunction;
+    private UtilityFunctions utilityFunction;
 
     @GetMapping("/getUserId/{userId}")
     public ResponseEntity<UserModel> getExistingUserById(@PathVariable String userId, @RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException, UserNotFoundException {

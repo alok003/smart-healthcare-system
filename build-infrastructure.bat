@@ -34,19 +34,19 @@ cd ..
 
 echo [6/9] Building Doctor Service...
 cd doctorService
-call mvnw.cmd clean package -DskipTests
+call mvnw.cmd clean package
 if %errorlevel% neq 0 exit /b %errorlevel%
 cd ..
 
 echo [7/9] Building Patient Service...
 cd patientService
-call mvnw.cmd clean package -DskipTests
+call mvnw.cmd clean package
 if %errorlevel% neq 0 exit /b %errorlevel%
 cd ..
 
 echo [8/9] Building Appointment Service...
 cd appointmentService
-call mvnw.cmd clean package -DskipTests
+call mvnw.cmd clean package
 if %errorlevel% neq 0 exit /b %errorlevel%
 cd ..
 

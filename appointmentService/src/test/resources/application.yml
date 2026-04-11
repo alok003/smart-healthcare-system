@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: appointment-service-test
+  config:
+    import: "optional:configserver:"
+  cloud:
+    config:
+      enabled: false
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/test-appointment
+  kafka:
+    bootstrap-servers: localhost:9092
+
+eureka:
+  client:
+    enabled: false

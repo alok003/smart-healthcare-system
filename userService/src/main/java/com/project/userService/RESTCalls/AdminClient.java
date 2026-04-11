@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @FeignClient(name="admin-service")
 public interface AdminClient {
 
-    @GetMapping("api/admin-service/secure/checkStatus")
+    @GetMapping("/api/admin-service/secure/checkStatus")
     RequestRoleDto checkStatusViaEmail(
             @RequestHeader("X-User-Email") String email,
             @RequestHeader("X-User-Role") String role,

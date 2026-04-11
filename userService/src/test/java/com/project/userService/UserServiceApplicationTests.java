@@ -1,7 +1,7 @@
 package com.project.userService;
 
 import com.project.userService.Utility.LogUtil;
-import com.project.userService.Utility.UtilityFunction;
+import com.project.userService.Utility.UtilityFunctions;
 import com.project.userService.Entity.User;
 import com.project.userService.Model.UserModel;
 import com.project.userService.Model.UserRole;
@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class UserServiceApplicationTests {
 
-    private final UtilityFunction utilityFunction = new UtilityFunction();
+    private final UtilityFunctions utilityFunction = new UtilityFunctions();
 
     @Test
     void cnvBeanToEntity_mapsFieldsCorrectly() {

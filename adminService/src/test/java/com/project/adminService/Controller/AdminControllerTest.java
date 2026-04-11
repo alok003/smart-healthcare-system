@@ -11,12 +11,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.messaging.Message;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
@@ -35,6 +39,9 @@ class AdminControllerTest {
 
     @MockitoBean
     private ExternalServiceClient externalServiceClient;
+
+    @MockitoBean
+    private KafkaTemplate<String, Map<String, Object>> kafkaTemplate;
 
     private final ObjectMapper objectMapper = new ObjectMapper()
             .registerModule(new JavaTimeModule());
@@ -91,6 +98,7 @@ class AdminControllerTest {
         RequestRole r = buildRequest("id-1", USER_EMAIL, UserRole.PATIENT, Status.PENDING);
         when(adminRepository.findById("id-1")).thenReturn(Optional.of(r));
         when(adminRepository.save(any(RequestRole.class))).thenReturn(r);
+        when(kafkaTemplate.send(any(Message.class))).thenReturn(CompletableFuture.completedFuture(null));
 
         mockMvc.perform(put("/api/admin-service/secure/declineRequest/id-1")
                         .header("X-User-Email", ADMIN_EMAIL)
@@ -147,6 +155,7 @@ class AdminControllerTest {
         when(adminRepository.findById("id-1")).thenReturn(Optional.of(r));
         when(adminRepository.save(any(RequestRole.class))).thenReturn(r);
         when(externalServiceClient.changeUserRole(any(ChangeRequest.class), eq(ADMIN_EMAIL))).thenReturn(USER_EMAIL);
+        when(kafkaTemplate.send(any(Message.class))).thenReturn(CompletableFuture.completedFuture(null));
 
         mockMvc.perform(put("/api/admin-service/secure/approve/id-1")
                         .header("X-User-Email", ADMIN_EMAIL)
@@ -165,6 +174,7 @@ class AdminControllerTest {
         when(adminRepository.save(any(RequestRole.class))).thenReturn(r);
         when(externalServiceClient.changeUserRole(any(ChangeRequest.class), eq(ADMIN_EMAIL))).thenReturn(USER_EMAIL);
         when(externalServiceClient.saveDoctorProfile(any(DoctorDto.class), any(Integer.class), any(Double.class), eq(ADMIN_EMAIL))).thenReturn("doctor-id");
+        when(kafkaTemplate.send(any(Message.class))).thenReturn(CompletableFuture.completedFuture(null));
 
         mockMvc.perform(put("/api/admin-service/secure/approve/id-1")
                         .header("X-User-Email", ADMIN_EMAIL)
@@ -188,6 +198,7 @@ class AdminControllerTest {
         when(adminRepository.save(any(RequestRole.class))).thenReturn(r);
         when(externalServiceClient.changeUserRole(any(ChangeRequest.class), eq(ADMIN_EMAIL))).thenReturn(USER_EMAIL);
         when(externalServiceClient.savePatientProfile(any(PatientDto.class), eq(ADMIN_EMAIL))).thenReturn("patient-id");
+        when(kafkaTemplate.send(any(Message.class))).thenReturn(CompletableFuture.completedFuture(null));
 
         mockMvc.perform(put("/api/admin-service/secure/approve/id-1")
                         .header("X-User-Email", ADMIN_EMAIL)

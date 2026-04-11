@@ -5,8 +5,8 @@ import com.project.adminService.Model.PatientDto;
 import com.project.adminService.Model.Status;
 import com.project.adminService.Model.UserRole;
 import lombok.Data;
-import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -14,7 +14,6 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 
 import java.time.Instant;
-import java.util.Map;
 
 @Data
 @Document(collection = "Requests")
@@ -32,4 +31,6 @@ public class RequestRole {
     private Instant createdAt;
     @LastModifiedDate
     private Instant updatedAt;
+    @LastModifiedBy
+    private String lastModifiedBy;
 }

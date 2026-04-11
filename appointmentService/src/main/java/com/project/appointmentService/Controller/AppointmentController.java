@@ -33,11 +33,28 @@ public class AppointmentController {
         return ResponseEntity.status(HttpStatus.CREATED).body(appointmentService.saveAppointment(appointmentDto));
     }
 
-    @DeleteMapping("/cancelAppointment/{appointmentId}")
-    public ResponseEntity<AppointmentDto> cancelAppointment(@PathVariable String appointmentId, @RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException, AppointmentNotFoundException {
-        log.info("action=REQUEST_RECEIVED method=DELETE path=/api/appointment-service/secure/cancelAppointment/{} requestedBy={} role={}", appointmentId, email, role);
-        if (!utilityFunctions.validateRequestAdminOrPatient(email, role)) throw new UnAuthorizedException();
-        return ResponseEntity.status(HttpStatus.OK).body(appointmentService.cancelAppointment(appointmentId, email, role));
+    @PutMapping("/markCancelled/{appointmentId}")
+    public ResponseEntity<Void> markCancelled(@PathVariable String appointmentId, @RequestParam String cancelledBy, @RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException, AppointmentNotFoundException {
+        log.info("action=REQUEST_RECEIVED method=PUT path=/api/appointment-service/secure/markCancelled/{} requestedBy={} role={} cancelledBy={}", appointmentId, email, role, cancelledBy);
+        if (!utilityFunctions.validateRequestAdmin(email, role)) throw new UnAuthorizedException();
+        appointmentService.markCancelled(appointmentId, cancelledBy);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+    @PutMapping("/restoreAppointment/{appointmentId}")
+    public ResponseEntity<Void> restoreAppointment(@PathVariable String appointmentId, @RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException, AppointmentNotFoundException {
+        log.info("action=REQUEST_RECEIVED method=PUT path=/api/appointment-service/secure/restoreAppointment/{} requestedBy={} role={}", appointmentId, email, role);
+        if (!utilityFunctions.validateRequestAdmin(email, role)) throw new UnAuthorizedException();
+        appointmentService.restoreAppointment(appointmentId);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+    @DeleteMapping("/deleteAppointment/{appointmentId}")
+    public ResponseEntity<Void> deleteAppointment(@PathVariable String appointmentId, @RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException, AppointmentNotFoundException {
+        log.info("action=REQUEST_RECEIVED method=DELETE path=/api/appointment-service/secure/deleteAppointment/{} requestedBy={} role={}", appointmentId, email, role);
+        if (!utilityFunctions.validateRequestAdmin(email, role)) throw new UnAuthorizedException();
+        appointmentService.deleteAppointment(appointmentId);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
     @PostMapping("/completeAppointment")

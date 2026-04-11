@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Your Appointments for Tomorrow</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 50px auto; background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { margin: 0; color: #3498db; }
+        .content { color: #555; line-height: 1.6; }
+        .schedule-box { background-color: #eaf4fb; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3498db; }
+        .schedule-box h3 { margin-top: 0; color: #1a5276; }
+        .appointment-item { background-color: #ffffff; border: 1px solid #d6eaf8; border-radius: 6px; padding: 10px 15px; margin: 8px 0; font-size: 14px; color: #2c3e50; }
+        .appointment-item span { font-weight: bold; color: #3498db; }
+        .count-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-weight: bold; background-color: #3498db; color: white; }
+        .note { background-color: #fef9e7; border-left: 4px solid #f39c12; padding: 12px 15px; border-radius: 5px; font-size: 13px; color: #7d6608; margin-top: 15px; }
+        .footer { margin-top: 30px; text-align: center; color: #999; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏥 Smart Healthcare System</h1>
+        </div>
+        <div class="content">
+            <p>Dear Doctor (<span th:text="${doctorEmail}">doctor@example.com</span>),</p>
+            <p>Here is your appointment schedule for tomorrow.</p>
+            <div class="schedule-box">
+                <h3>📅 Schedule for <span th:text="${date}">-</span></h3>
+                <p>Total appointments: <span class="count-badge" th:text="${#lists.size(appointmentIds)}">0</span></p>
+                <div th:each="apptId : ${appointmentIds}">
+                    <div class="appointment-item">
+                        Appointment ID: <span th:text="${apptId}">-</span>
+                    </div>
+                </div>
+            </div>
+            <div class="note">
+                ⏰ Please review your schedule and be prepared. Patients will be notified of their appointment times.
+            </div>
+            <p>Best regards,<br><strong>Smart Healthcare Team</strong></p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2026 Smart Healthcare System. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

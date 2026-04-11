@@ -71,17 +71,12 @@ public class UserService {
         requestRoleDto.setUserEmail(email);
         requestRoleDto.setUserRole(UserRole.ADMIN);
         log.info("action=KAFKA_PUBLISH status=INITIATED topic=role-request identifier={} payload={}", email, LogUtil.toJson(requestRoleDto));
-        try {
-            kafkaTemplate.send(MessageBuilder
-                    .withPayload(UtilityFunctions.cnvDtoToMap(requestRoleDto))
-                    .setHeader(KafkaHeaders.TOPIC, "role-request")
-                    .setHeader("X-Correlation-ID", MDC.get("correlationId"))
-                    .build()).get();
-            log.info("action=KAFKA_PUBLISH status=SUCCESS topic=role-request identifier={}", email);
-        } catch (Exception e) {
-            log.error("action=KAFKA_PUBLISH status=FAILED topic=role-request identifier={} reason=KAFKA_UNAVAILABLE error={}", email, e.getMessage());
-            throw new RuntimeException("Request failed, please try again later.");
-        }
+        kafkaTemplate.send(MessageBuilder
+                .withPayload(UtilityFunctions.cnvDtoToMap(requestRoleDto))
+                .setHeader(KafkaHeaders.TOPIC, "role-request")
+                .setHeader("X-Correlation-ID", MDC.get("correlationId"))
+                .build());
+        log.info("action=KAFKA_PUBLISH status=SUCCESS topic=role-request identifier={}", email);
         log.info("action=ROLE_REQUEST status=SUCCESS identifier={} targetRole=ADMIN", email);
         return "Request for Admin access sent successfully";
     }
@@ -96,17 +91,12 @@ public class UserService {
         requestRoleDto.setUserRole(UserRole.DOCTOR);
         requestRoleDto.getDoctorDto().setEmail(email);
         log.info("action=KAFKA_PUBLISH status=INITIATED topic=role-request identifier={} payload={}", email, LogUtil.toJson(requestRoleDto));
-        try {
-            kafkaTemplate.send(MessageBuilder
-                    .withPayload(UtilityFunctions.cnvDtoToMap(requestRoleDto))
-                    .setHeader(KafkaHeaders.TOPIC, "role-request")
-                    .setHeader("X-Correlation-ID", MDC.get("correlationId"))
-                    .build()).get();
-            log.info("action=KAFKA_PUBLISH status=SUCCESS topic=role-request identifier={}", email);
-        } catch (Exception e) {
-            log.error("action=KAFKA_PUBLISH status=FAILED topic=role-request identifier={} reason=KAFKA_UNAVAILABLE error={}", email, e.getMessage());
-            throw new RuntimeException("Request failed, please try again later.");
-        }
+        kafkaTemplate.send(MessageBuilder
+                .withPayload(UtilityFunctions.cnvDtoToMap(requestRoleDto))
+                .setHeader(KafkaHeaders.TOPIC, "role-request")
+                .setHeader("X-Correlation-ID", MDC.get("correlationId"))
+                .build());
+        log.info("action=KAFKA_PUBLISH status=SUCCESS topic=role-request identifier={}", email);
         log.info("action=ROLE_REQUEST status=SUCCESS identifier={} targetRole=DOCTOR", email);
         return "Request for Doctor access sent successfully";
     }
@@ -122,17 +112,12 @@ public class UserService {
         requestRoleDto.getPatientDto().setEmail(email);
         requestRoleDto.getPatientDto().setName(findByEmailId(email).getUserName());
         log.info("action=KAFKA_PUBLISH status=INITIATED topic=role-request identifier={} payload={}", email, LogUtil.toJson(requestRoleDto));
-        try {
-            kafkaTemplate.send(MessageBuilder
-                    .withPayload(UtilityFunctions.cnvDtoToMap(requestRoleDto))
-                    .setHeader(KafkaHeaders.TOPIC, "role-request")
-                    .setHeader("X-Correlation-ID", MDC.get("correlationId"))
-                    .build()).get();
-            log.info("action=KAFKA_PUBLISH status=SUCCESS topic=role-request identifier={}", email);
-        } catch (Exception e) {
-            log.error("action=KAFKA_PUBLISH status=FAILED topic=role-request identifier={} reason=KAFKA_UNAVAILABLE error={}", email, e.getMessage());
-            throw new RuntimeException("Request failed, please try again later.");
-        }
+        kafkaTemplate.send(MessageBuilder
+                .withPayload(UtilityFunctions.cnvDtoToMap(requestRoleDto))
+                .setHeader(KafkaHeaders.TOPIC, "role-request")
+                .setHeader("X-Correlation-ID", MDC.get("correlationId"))
+                .build());
+        log.info("action=KAFKA_PUBLISH status=SUCCESS topic=role-request identifier={}", email);
         log.info("action=ROLE_REQUEST status=SUCCESS identifier={} targetRole=PATIENT", email);
         return "Request for Patient access sent successfully";
     }

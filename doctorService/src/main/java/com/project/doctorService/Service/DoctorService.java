@@ -9,8 +9,11 @@ import com.project.doctorService.Utility.UtilityFunctions;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
-
 import org.springframework.scheduling.annotation.Scheduled;
 
 import java.time.LocalDate;
@@ -26,6 +29,7 @@ public class DoctorService {
     private DoctorRepository doctorRepository;
     private UtilityFunctions utilityFunctions;
     private ExternalServiceClient externalServiceClient;
+    private KafkaTemplate<String, Map<String, Object>> kafkaTemplate;
 
     public DoctorDto saveRequest(DoctorDto doctorDto, int maxCount, double rate) {
         log.info("action=SAVE_DOCTOR status=INITIATED identifier={}", doctorDto.getEmail());
@@ -62,19 +66,51 @@ public class DoctorService {
         Map<LocalDate, BookingList> bookingListMap = doctor.get().getBookings().getBookingListMap();
         for (LocalDate day : leave) {
             if (!bookingListMap.containsKey(day)) continue;
-            List<String> appointmentIds = bookingListMap.get(day).getBookingId();
-            boolean allCancelled = true;
+            BookingList slot = bookingListMap.get(day);
+            if (slot.getAvailibility() == Availibility.UNAVAILABLE) {
+                log.debug("action=ADD_LEAVE detail=SKIPPED_ALREADY_UNAVAILABLE identifier={} date={}", email, day);
+                continue;
+            }
+            List<String> appointmentIds = new ArrayList<>(slot.getBookingId());
+            List<String> successfullyCleaned = new ArrayList<>();
+            boolean allCleared = true;
             for (String appointmentId : appointmentIds) {
                 try {
-                    externalServiceClient.cancelAppointment(appointmentId, email, UserRole.ADMIN.name());
+                    externalServiceClient.markCancelled(appointmentId, email, email, UserRole.ADMIN.name());
+                    log.debug("action=ADD_LEAVE detail=APPOINTMENT_CANCELLED identifier={} date={} appointmentId={}", email, day, appointmentId);
                 } catch (Exception e) {
-                    log.warn("action=ADD_LEAVE status=PARTIAL_FAIL identifier={} date={} appointmentId={} reason={}", email, day, appointmentId, e.getMessage());
-                    allCancelled = false;
+                    log.warn("action=ADD_LEAVE status=PARTIAL_FAIL identifier={} date={} appointmentId={} reason=CANCEL_FAILED error={}", email, day, appointmentId, e.getMessage());
+                    allCleared = false;
+                    break;
+                }
+                try {
+                    externalServiceClient.removeAppointmentFromPatient(appointmentId, email, UserRole.ADMIN.name());
+                    log.debug("action=ADD_LEAVE detail=PATIENT_UPDATED identifier={} date={} appointmentId={}", email, day, appointmentId);
+                    successfullyCleaned.add(appointmentId);
+                    kafkaTemplate.send(MessageBuilder
+                            .withPayload(Map.of("appointmentId", appointmentId, "cancelledBy", email, "date", day.toString()))
+                            .setHeader(KafkaHeaders.TOPIC, "appointment-cancelled-notification")
+                            .setHeader("X-Correlation-ID", MDC.get("correlationId"))
+                            .build());
+                    log.debug("action=KAFKA_PUBLISH status=SUCCESS topic=appointment-cancelled-notification appointmentId={}", appointmentId);
+                } catch (Exception e) {
+                    log.warn("action=ADD_LEAVE status=PARTIAL_FAIL identifier={} date={} appointmentId={} reason=PATIENT_REMOVE_FAILED error={}", email, day, appointmentId, e.getMessage());
+                    try {
+                        externalServiceClient.restoreAppointment(appointmentId, email, UserRole.ADMIN.name());
+                        log.debug("action=ADD_LEAVE detail=APPOINTMENT_RESTORED identifier={} date={} appointmentId={}", email, day, appointmentId);
+                    } catch (Exception restoreEx) {
+                        log.error("action=ADD_LEAVE status=ROLLBACK_FAILED identifier={} date={} appointmentId={} reason=RESTORE_FAILED error={}", email, day, appointmentId, restoreEx.getMessage());
+                    }
+                    allCleared = false;
+                    break;
                 }
             }
-            if (allCancelled) {
-                bookingListMap.get(day).setAvailibility(Availibility.UNAVAILABLE);
+            slot.getBookingId().removeAll(successfullyCleaned);
+            if (allCleared) {
+                slot.setAvailibility(Availibility.UNAVAILABLE);
                 log.debug("action=ADD_LEAVE detail=DATE_MARKED_UNAVAILABLE identifier={} date={}", email, day);
+            } else {
+                log.warn("action=ADD_LEAVE detail=DATE_NOT_FULLY_CLEARED identifier={} date={} clearedCount={} totalCount={}", email, day, successfullyCleaned.size(), appointmentIds.size());
             }
         }
         Doctor doctorSave = doctor.get();
@@ -153,6 +189,28 @@ public class DoctorService {
             log.debug("action=REFRESH_BOOKING_SCHEDULES detail=UPDATED identifier={} slotsAdded={}", doctor.getEmail(), added);
         }
         log.info("action=REFRESH_BOOKING_SCHEDULES status=SUCCESS doctorCount={}", doctors.size());
+    }
+
+    @Scheduled(cron = "0 5 0 * * *")
+    public void sendDailyScheduleNotification() {
+        log.info("action=DAILY_SCHEDULE_NOTIFICATION status=INITIATED");
+        LocalDate tomorrow = LocalDate.now().plusDays(1);
+        List<Doctor> doctors = doctorRepository.findAll();
+        for (Doctor doctor : doctors) {
+            BookingList slot = doctor.getBookings().getBookingListMap().get(tomorrow);
+            if (slot == null || slot.getBookingId().isEmpty()) continue;
+            kafkaTemplate.send(MessageBuilder
+                    .withPayload(Map.of(
+                            "doctorEmail", doctor.getEmail(),
+                            "date", tomorrow.toString(),
+                            "appointmentIds", slot.getBookingId()
+                    ))
+                    .setHeader(KafkaHeaders.TOPIC, "doctor-daily-schedule")
+                    .setHeader("X-Correlation-ID", UUID.randomUUID().toString())
+                    .build());
+            log.debug("action=DAILY_SCHEDULE_NOTIFICATION detail=PUBLISHED identifier={} date={} count={}", doctor.getEmail(), tomorrow, slot.getBookingId().size());
+        }
+        log.info("action=DAILY_SCHEDULE_NOTIFICATION status=SUCCESS doctorCount={}", doctors.size());
     }
 
     public void removeAppointmentFromSchedule(String appointmentId, String doctorId, String dateStr) {

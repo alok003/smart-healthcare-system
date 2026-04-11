@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+
 @Service
 @AllArgsConstructor
 public class AppointmentService {
@@ -30,32 +31,39 @@ public class AppointmentService {
     private UtilityFunctions utilityFunctions;
     private KafkaTemplate<String, Map<String, Object>> kafkaTemplate;
 
-    public AppointmentDto saveAppointment(AppointmentDto appointmentDto) {
-        log.info("action=BOOK_APPOINTMENT status=INITIATED patientId={} doctorId={} date={}", appointmentDto.getPatientId(), appointmentDto.getDoctorId(), appointmentDto.getDate());
-        Appointment saved = appointmentRepository.save(utilityFunctions.cnvDtoToEntity(appointmentDto));
-        kafkaTemplate.send(MessageBuilder.withPayload(UtilityFunctions.cnvDtoToMap(saved))
-                .setHeader(KafkaHeaders.TOPIC, "appointment-booked")
-                .setHeader("X-Correlation-ID", MDC.get("correlationId"))
-                .build());
-        log.info("action=BOOK_APPOINTMENT status=SUCCESS id={} patientId={} doctorId={}", saved.getId(), saved.getPatientId(), saved.getDoctorId());
-        return utilityFunctions.cnvEntityToDto(saved);
-    }
-
-    public AppointmentDto cancelAppointment(String appointmentId, String email, String cancelledBy) throws AppointmentNotFoundException {
-        log.info("action=CANCEL_APPOINTMENT status=INITIATED identifier={} cancelledBy={}", appointmentId, cancelledBy);
+    public void markCancelled(String appointmentId, String cancelledBy) throws AppointmentNotFoundException {
+        log.info("action=MARK_CANCELLED status=INITIATED identifier={} cancelledBy={}", appointmentId, cancelledBy);
         Optional<Appointment> appointmentOptional = appointmentRepository.findById(appointmentId);
         if (appointmentOptional.isEmpty()) throw new AppointmentNotFoundException(appointmentId);
         Appointment appointment = appointmentOptional.get();
         appointment.setStatus(Status.CANCELLED);
-        appointment.setDescription("Appointment cancelled by: " + email);
-        Appointment saved = appointmentRepository.save(appointment);
-        Map<String, Object> message = UtilityFunctions.cnvDtoToMap(saved);
-        message.put("cancelledBy", cancelledBy);
-        kafkaTemplate.send(MessageBuilder.withPayload(message)
-                .setHeader(KafkaHeaders.TOPIC, "appointment-cancelled")
-                .setHeader("X-Correlation-ID", MDC.get("correlationId"))
-                .build());
-        log.info("action=CANCEL_APPOINTMENT status=SUCCESS identifier={} patientId={} doctorId={}", appointmentId, saved.getPatientId(), saved.getDoctorId());
+        appointment.setDescription("Appointment cancelled by: " + cancelledBy);
+        appointmentRepository.save(appointment);
+        log.info("action=MARK_CANCELLED status=SUCCESS identifier={}", appointmentId);
+    }
+
+    public void restoreAppointment(String appointmentId) throws AppointmentNotFoundException {
+        log.info("action=RESTORE_APPOINTMENT status=INITIATED identifier={}", appointmentId);
+        Optional<Appointment> appointmentOptional = appointmentRepository.findById(appointmentId);
+        if (appointmentOptional.isEmpty()) throw new AppointmentNotFoundException(appointmentId);
+        Appointment appointment = appointmentOptional.get();
+        appointment.setStatus(Status.UPCOMING);
+        appointment.setDescription(null);
+        appointmentRepository.save(appointment);
+        log.info("action=RESTORE_APPOINTMENT status=SUCCESS identifier={}", appointmentId);
+    }
+
+    public void deleteAppointment(String appointmentId) throws AppointmentNotFoundException {
+        log.info("action=DELETE_APPOINTMENT status=INITIATED identifier={}", appointmentId);
+        if (!appointmentRepository.existsById(appointmentId)) throw new AppointmentNotFoundException(appointmentId);
+        appointmentRepository.deleteById(appointmentId);
+        log.info("action=DELETE_APPOINTMENT status=SUCCESS identifier={}", appointmentId);
+    }
+
+    public AppointmentDto saveAppointment(AppointmentDto appointmentDto) {
+        log.info("action=BOOK_APPOINTMENT status=INITIATED patientId={} doctorId={} date={}", appointmentDto.getPatientId(), appointmentDto.getDoctorId(), appointmentDto.getDate());
+        Appointment saved = appointmentRepository.save(utilityFunctions.cnvDtoToEntity(appointmentDto));
+        log.info("action=BOOK_APPOINTMENT status=SUCCESS id={} patientId={} doctorId={}", saved.getId(), saved.getPatientId(), saved.getDoctorId());
         return utilityFunctions.cnvEntityToDto(saved);
     }
 

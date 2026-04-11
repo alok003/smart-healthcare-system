@@ -47,7 +47,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiExceptionResponseTemplate> handleRuntimeException(RuntimeException ex) {
         log.error("action=EXCEPTION_HANDLED exception=RuntimeException reason={}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                 ApiExceptionResponseTemplate.builder().timestamp(new Date()).message(ex.getMessage()).build());
     }
 

@@ -31,8 +31,7 @@
         </div>
         <div class="content">
             <p>Dear Patient,</p>
-            <p>Your visit has been completed and your prescription is now ready. Please find your visit summary below. The full prescription document is attached as a PDF for your records and medical use.</p>
-
+            <p>Your visit has been completed and your prescription is now ready. Please find your visit summary below. The full prescription document is attached as a PDF.</p>
             <div class="info-box">
                 <h3>📋 Visit Summary</h3>
                 <div class="detail-row">
@@ -40,7 +39,7 @@
                     <span th:text="${id}">-</span>
                 </div>
                 <div class="detail-row">
-                    <span class="label">Doctor ID</span>
+                    <span class="label">Doctor</span>
                     <span th:text="${doctorId}">-</span>
                 </div>
                 <div class="detail-row">
@@ -48,29 +47,21 @@
                     <span th:text="${date}">-</span>
                 </div>
                 <div class="detail-row">
-                    <span class="label">Reason for Visit</span>
+                    <span class="label">Reason</span>
                     <span th:text="${subject}">-</span>
-                </div>
-                <div class="detail-row">
-                    <span class="label">Notes</span>
-                    <span th:text="${description}">-</span>
                 </div>
                 <div class="detail-row">
                     <span class="label">Status</span>
                     <span class="status-badge" th:text="${status}">VISITED</span>
                 </div>
             </div>
-
             <div class="prescription-box" th:if="${visitDetails != null and visitDetails.prescription != null}">
                 <h3>💊 Prescription</h3>
                 <p class="prescription-text" th:text="${visitDetails.prescription}">-</p>
             </div>
-
             <div class="note">
-                📎 The attached PDF contains your complete prescription and health vitals recorded during your visit. Please carry it when purchasing medicines or for any medical documentation purposes.
+                📎 The attached PDF contains your complete prescription and health vitals. Please carry it when purchasing medicines.
             </div>
-
-            <p>If you have any questions about your prescription, please consult your doctor.</p>
             <p>Best regards,<br><strong>Smart Healthcare Team</strong></p>
         </div>
         <div class="footer">

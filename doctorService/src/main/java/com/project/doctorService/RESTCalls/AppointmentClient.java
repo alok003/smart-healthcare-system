@@ -10,8 +10,16 @@ import java.util.List;
 @FeignClient(name = "appointment-service")
 public interface AppointmentClient {
 
-    @DeleteMapping("/api/appointment-service/secure/cancelAppointment/{appointmentId}")
-    AppointmentDto cancelAppointmentAppointmentClient(
+    @PutMapping("/api/appointment-service/secure/markCancelled/{appointmentId}")
+    void markCancelled(
+            @PathVariable String appointmentId,
+            @RequestParam String cancelledBy,
+            @RequestHeader("X-User-Email") String email,
+            @RequestHeader("X-User-Role") String role
+    );
+
+    @PutMapping("/api/appointment-service/secure/restoreAppointment/{appointmentId}")
+    void restoreAppointment(
             @PathVariable String appointmentId,
             @RequestHeader("X-User-Email") String email,
             @RequestHeader("X-User-Role") String role

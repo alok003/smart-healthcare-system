@@ -270,6 +270,8 @@ services:
         condition: service_started
     networks:
       - healthcare-network
+    volumes:
+      - ./logs/notification-service:/app/logs
     deploy:
       resources:
         limits:

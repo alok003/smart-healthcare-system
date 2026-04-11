@@ -27,6 +27,14 @@ public interface DoctorClient {
             @RequestHeader("X-User-Role") String role
     );
 
+    @DeleteMapping("/api/doctor-service/secure/removeAppointmentFromSchedule")
+    void removeAppointmentFromSchedule(
+            @RequestParam String appointmentId,
+            @RequestParam String date,
+            @RequestHeader("X-User-Email") String email,
+            @RequestHeader("X-User-Role") String role
+    );
+
     @PostMapping("/api/doctor-service/secure/addDocAppointment")
     Boolean addDocAppointment(
             @RequestBody AppointmentDto appointmentDto,

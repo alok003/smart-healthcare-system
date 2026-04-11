@@ -36,18 +36,56 @@ public class ExternalServiceClient {
         throw new RuntimeException("Appointment service unavailable, unable to book appointment: " + e.getMessage());
     }
 
-    @CircuitBreaker(name = "appointmentService", fallbackMethod = "cancelAppointmentFallback")
+    @CircuitBreaker(name = "appointmentService", fallbackMethod = "deleteAppointmentFallback")
     @Retry(name = "appointmentService")
-    public AppointmentDto cancelAppointment(String id, String email, String role) {
-        log.info("action=FEIGN_REQUEST service=appointment-service endpoint=/cancelAppointment identifier={}", id);
-        AppointmentDto result = appointmentClient.cancelAppointmentAppointmentClient(id, email, role);
+    public void deleteAppointment(String id, String email, String role) {
+        log.info("action=FEIGN_REQUEST service=appointment-service endpoint=/deleteAppointment identifier={}", id);
+        appointmentClient.deleteAppointment(id, email, role);
         log.info("action=FEIGN_RESPONSE service=appointment-service status=SUCCESS identifier={}", id);
-        return result;
     }
 
-    private AppointmentDto cancelAppointmentFallback(String id, String email, String role, Exception e) {
+    private void deleteAppointmentFallback(String id, String email, String role, Exception e) {
         log.error("action=FEIGN_RESPONSE service=appointment-service status=FAILED identifier={} reason=SERVICE_UNAVAILABLE error={}", id, e.getMessage());
-        throw new RuntimeException("Appointment service unavailable, unable to cancel appointment: " + e.getMessage());
+        throw new RuntimeException("Appointment service unavailable, unable to delete appointment: " + e.getMessage());
+    }
+
+    @CircuitBreaker(name = "appointmentService", fallbackMethod = "markCancelledFallback")
+    @Retry(name = "appointmentService")
+    public void markCancelled(String id, String cancelledBy, String email, String role) {
+        log.info("action=FEIGN_REQUEST service=appointment-service endpoint=/markCancelled identifier={} cancelledBy={}", id, cancelledBy);
+        appointmentClient.markCancelled(id, cancelledBy, email, role);
+        log.info("action=FEIGN_RESPONSE service=appointment-service status=SUCCESS identifier={}", id);
+    }
+
+    private void markCancelledFallback(String id, String cancelledBy, String email, String role, Exception e) {
+        log.error("action=FEIGN_RESPONSE service=appointment-service status=FAILED identifier={} reason=SERVICE_UNAVAILABLE error={}", id, e.getMessage());
+        throw new RuntimeException("Appointment service unavailable, unable to mark cancelled: " + e.getMessage());
+    }
+
+    @CircuitBreaker(name = "appointmentService", fallbackMethod = "restoreAppointmentFallback")
+    @Retry(name = "appointmentService")
+    public void restoreAppointment(String id, String email, String role) {
+        log.info("action=FEIGN_REQUEST service=appointment-service endpoint=/restoreAppointment identifier={}", id);
+        appointmentClient.restoreAppointment(id, email, role);
+        log.info("action=FEIGN_RESPONSE service=appointment-service status=SUCCESS identifier={}", id);
+    }
+
+    private void restoreAppointmentFallback(String id, String email, String role, Exception e) {
+        log.error("action=FEIGN_RESPONSE service=appointment-service status=FAILED identifier={} reason=SERVICE_UNAVAILABLE error={}", id, e.getMessage());
+        throw new RuntimeException("Appointment service unavailable, unable to restore appointment: " + e.getMessage());
+    }
+
+    @CircuitBreaker(name = "doctorService", fallbackMethod = "removeFromScheduleFallback")
+    @Retry(name = "doctorService")
+    public void removeAppointmentFromSchedule(String appointmentId, String date, String email, String role) {
+        log.info("action=FEIGN_REQUEST service=doctor-service endpoint=/removeAppointmentFromSchedule identifier={}", appointmentId);
+        doctorClient.removeAppointmentFromSchedule(appointmentId, date, email, role);
+        log.info("action=FEIGN_RESPONSE service=doctor-service status=SUCCESS identifier={}", appointmentId);
+    }
+
+    private void removeFromScheduleFallback(String appointmentId, String date, String email, String role, Exception e) {
+        log.error("action=FEIGN_RESPONSE service=doctor-service status=FAILED identifier={} reason=SERVICE_UNAVAILABLE error={}", appointmentId, e.getMessage());
+        throw new RuntimeException("Doctor service unavailable, unable to remove from schedule: " + e.getMessage());
     }
 
     @CircuitBreaker(name = "appointmentService", fallbackMethod = "getAppointmentsByPatientFallback")

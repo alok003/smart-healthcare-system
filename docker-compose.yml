@@ -74,6 +74,8 @@ services:
         condition: service_healthy
     networks:
       - healthcare-network
+    volumes:
+      - ./logs/gateway:/app/logs
     deploy:
       resources:
         limits:
@@ -105,6 +107,8 @@ services:
         condition: service_healthy
     networks:
       - healthcare-network
+    volumes:
+      - ./logs/user-service:/app/logs
     deploy:
       resources:
         limits:
@@ -135,6 +139,8 @@ services:
         condition: service_healthy
     networks:
       - healthcare-network
+    volumes:
+      - ./logs/admin-service:/app/logs
     deploy:
       resources:
         limits:
@@ -165,6 +171,8 @@ services:
         condition: service_healthy
     networks:
       - healthcare-network
+    volumes:
+      - ./logs/doctor-service:/app/logs
     deploy:
       resources:
         limits:
@@ -195,6 +203,8 @@ services:
         condition: service_healthy
     networks:
       - healthcare-network
+    volumes:
+      - ./logs/patient-service:/app/logs
     deploy:
       resources:
         limits:
@@ -225,6 +235,8 @@ services:
         condition: service_healthy
     networks:
       - healthcare-network
+    volumes:
+      - ./logs/appointment-service:/app/logs
     deploy:
       resources:
         limits:

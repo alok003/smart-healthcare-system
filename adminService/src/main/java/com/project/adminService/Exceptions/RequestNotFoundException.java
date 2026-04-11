@@ -1,7 +1,7 @@
 package com.project.adminService.Exceptions;
 
 public class RequestNotFoundException extends Exception {
-    public RequestNotFoundException() {
-        super("Request Not Found or Already Action is taken Exception");
+    public RequestNotFoundException(String id) {
+        super("Request not found or action already taken for: " + id);
     }
 }

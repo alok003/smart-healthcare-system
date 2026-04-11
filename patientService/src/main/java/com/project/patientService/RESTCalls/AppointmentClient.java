@@ -17,14 +17,14 @@ public interface AppointmentClient {
             @RequestHeader("X-User-Role") String role
     );
 
-    @PostMapping("/api/appointment-service/secure/cancelAppointment")
+    @DeleteMapping("/api/appointment-service/secure/cancelAppointment/{appointmentId}")
     AppointmentDto cancelAppointmentAppointmentClient(
-            @RequestBody String AppointmentId,
+            @PathVariable String appointmentId,
             @RequestHeader("X-User-Email") String email,
             @RequestHeader("X-User-Role") String role
     );
 
-    @GetMapping("/api/appointment-service/secure//getAppointmentsByUserId/{userId}")
+    @GetMapping("/api/appointment-service/secure/getAppointmentsByUserId/{userId}")
     List<AppointmentDto> getAllAppointmentsbyPatient(
             @PathVariable String userId,
             @RequestHeader("X-User-Email") String email,

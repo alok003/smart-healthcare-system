@@ -8,25 +8,63 @@ spring:
               uri: lb://user-service
               predicates:
                 - Path=/api/user-service/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: user-service
+                    fallbackUri: forward:/fallback
             - id: admin-service
               uri: lb://admin-service
               predicates:
                 - Path=/api/admin-service/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: admin-service
+                    fallbackUri: forward:/fallback
             - id: doctor-service
               uri: lb://doctor-service
               predicates:
                 - Path=/api/doctor-service/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: doctor-service
+                    fallbackUri: forward:/fallback
             - id: patient-service
               uri: lb://patient-service
               predicates:
                 - Path=/api/patient-service/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: patient-service
+                    fallbackUri: forward:/fallback
+            - id: appointment-service
+              uri: lb://appointment-service
+              predicates:
+                - Path=/api/appointment-service/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: appointment-service
+                    fallbackUri: forward:/fallback
+    loadbalancer:
+      cache:
+        ttl: 5s
+        capacity: 256
+    httpclient:
+      response-timeout: 10s
+      connect-timeout: 5000
 server:
   port: 8080
-
 eureka:
   client:
     serviceUrl:
       defaultZone: http://${EUREKA_HOST:localhost}:8761/eureka/
+    registry-fetch-interval-seconds: 5
+    healthcheck:
+      enabled: true
 app:
   secret-key: ${SECRET_KEY}
 management:

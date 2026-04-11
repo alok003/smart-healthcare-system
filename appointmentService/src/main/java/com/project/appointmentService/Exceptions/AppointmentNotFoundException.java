@@ -1,4 +1,4 @@
-package com.project.appointmentService.Exception;
+package com.project.appointmentService.Exceptions;
 
 public class AppointmentNotFoundException extends Exception{
     public AppointmentNotFoundException(String id) {

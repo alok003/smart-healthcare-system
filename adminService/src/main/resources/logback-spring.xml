@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <springProperty scope="context" name="SERVICE_NAME" source="spring.application.name" defaultValue="admin-service"/>
+
+    <property name="LOG_DIR" value="logs"/>
+    <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%-5level] [${SERVICE_NAME}] [corrId=%X{correlationId:-none}] [%logger{0}.%M] %msg%n"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight([%-5level]) [${SERVICE_NAME}] [corrId=%X{correlationId:-none}] [%logger{0}.%M] %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/${SERVICE_NAME}.log</file>
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/${SERVICE_NAME}.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>7</maxHistory>
+            <totalSizeCap>100MB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <logger name="com.project" level="DEBUG" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+    </logger>
+
+    <logger name="org.springframework" level="WARN"/>
+    <logger name="org.apache.kafka" level="WARN"/>
+    <logger name="org.apache.kafka.clients" level="WARN"/>
+    <logger name="com.netflix.eureka" level="WARN"/>
+    <logger name="com.netflix.discovery" level="WARN"/>
+    <logger name="org.hibernate.validator" level="WARN"/>
+    <logger name="org.mongodb.driver" level="WARN"/>
+    <logger name="com.zaxxer" level="WARN"/>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+    </root>
+
+</configuration>

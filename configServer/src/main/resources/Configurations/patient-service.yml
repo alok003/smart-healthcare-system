@@ -4,6 +4,10 @@ info:
     description: Patient Service for SHS.
     version: 1.0.0
 spring:
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
   data:
     mongodb:
       uri: mongodb://${MONGO_HOST:localhost}:27017/smart-healthcare-service
@@ -27,6 +31,9 @@ eureka:
   client:
     serviceUrl:
       defaultZone: http://${EUREKA_HOST:localhost}:8761/eureka/
+    healthcheck:
+      enabled: true
+    registry-fetch-interval-seconds: 5
 management:
   endpoints:
     web:
@@ -38,3 +45,28 @@ management:
   info:
     env:
       enabled: true
+resilience4j:
+  circuitbreaker:
+    instances:
+      appointmentService:
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        sliding-window-size: 10
+        permitted-number-of-calls-in-half-open-state: 3
+      doctorService:
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        sliding-window-size: 10
+        permitted-number-of-calls-in-half-open-state: 3
+  retry:
+    instances:
+      appointmentService:
+        max-attempts: 3
+        wait-duration: 500ms
+        retry-exceptions:
+          - feign.FeignException
+      doctorService:
+        max-attempts: 3
+        wait-duration: 500ms
+        retry-exceptions:
+          - feign.FeignException

@@ -4,6 +4,10 @@ info:
     description: User Service for SHS.
     version: 1.0.0
 spring:
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
   datasource:
     url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/userservice
     username: ${DATABASE_USERNAME}
@@ -14,7 +18,8 @@ spring:
       ddl-auto: update
       naming:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
-    show-sql: true
+    show-sql: false
+    open-in-view: false
   kafka:
     bootstrap-servers: ${KAFKA_HOST:localhost}:9092
     producer:
@@ -35,6 +40,9 @@ eureka:
   client:
     serviceUrl:
       defaultZone: http://${EUREKA_HOST:localhost}:8761/eureka/
+    healthcheck:
+      enabled: true
+    registry-fetch-interval-seconds: 5
 app:
   secret-key: ${SECRET_KEY}
   expiration: ${EXPIRATION}
@@ -49,3 +57,18 @@ management:
   info:
     env:
       enabled: true
+resilience4j:
+  circuitbreaker:
+    instances:
+      adminService:
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        sliding-window-size: 10
+        permitted-number-of-calls-in-half-open-state: 3
+  retry:
+    instances:
+      adminService:
+        max-attempts: 3
+        wait-duration: 500ms
+        retry-exceptions:
+          - feign.FeignException

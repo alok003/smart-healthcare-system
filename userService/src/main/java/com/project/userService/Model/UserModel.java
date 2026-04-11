@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
-import javax.validation.constraints.*;
+import jakarta.validation.constraints.*;
 @Data
 @RequiredArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -12,13 +12,13 @@ public class UserModel {
     @NotBlank(message = "Email Field must be filled")
     @Email(message = "Enter correct email format")
     private String userEmail;
-    @NotBlank(message = "Field must not be Blank")
-    @Size(min=3,max=10,message = "length must be in range 3 to 10")
+    @NotBlank(message = "Password is required")
+    @Size(min=8,max=30,message = "Password length must be in range 8 to 30")
     private String userPassword;
-    @NotBlank(message = "Field must not be Blank")
+    @NotBlank(message = "Name is required")
     private String userName;
-    @NotNull(message = "Field must not be Blank")
+    @NotNull(message = "Age is required")
     @Min(value = 10,message = "Age must be greater than 10")
     @Max(value = 100,message = "Age must be smaller than 100")
-    private int userAge;
+    private Integer userAge;
 }

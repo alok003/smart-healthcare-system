@@ -57,8 +57,8 @@ public class JwtFilter implements GlobalFilter, Ordered {
                 .build();
         ServerWebExchange exchangeWithCorrId = exchange.mutate().request(requestWithCorrId).build();
 
-        if (path.matches(".*/open/.*")) {
-            log.debug("action=JWT_VALIDATION status=SKIPPED path={} corrId={} reason=PUBLIC_ENDPOINT", path, finalCorrId);
+        if (path.matches(".*/open/.*") || path.matches(".*/v3/api-docs.*") || path.matches(".*/swagger-ui.*")) {
+            log.debug("action=JWT_VALIDATION status=SKIPPED path={} corrId={} reason=PUBLIC_OR_DOCS_ENDPOINT", path, finalCorrId);
             return chain.filter(exchangeWithCorrId)
                     .doFinally(sig -> logResponse(exchangeWithCorrId, finalCorrId));
         }

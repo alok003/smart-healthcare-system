@@ -4,6 +4,42 @@ spring:
       server:
         webflux:
           routes:
+            - id: user-service-docs
+              uri: lb://user-service
+              predicates:
+                - Path=/api/user-service/v3/api-docs
+              filters:
+                - RewritePath=/api/user-service/v3/api-docs, /v3/api-docs
+            - id: admin-service-docs
+              uri: lb://admin-service
+              predicates:
+                - Path=/api/admin-service/v3/api-docs
+              filters:
+                - RewritePath=/api/admin-service/v3/api-docs, /v3/api-docs
+            - id: doctor-service-docs
+              uri: lb://doctor-service
+              predicates:
+                - Path=/api/doctor-service/v3/api-docs
+              filters:
+                - RewritePath=/api/doctor-service/v3/api-docs, /v3/api-docs
+            - id: patient-service-docs
+              uri: lb://patient-service
+              predicates:
+                - Path=/api/patient-service/v3/api-docs
+              filters:
+                - RewritePath=/api/patient-service/v3/api-docs, /v3/api-docs
+            - id: appointment-service-docs
+              uri: lb://appointment-service
+              predicates:
+                - Path=/api/appointment-service/v3/api-docs
+              filters:
+                - RewritePath=/api/appointment-service/v3/api-docs, /v3/api-docs
+            - id: notification-service-docs
+              uri: lb://notification-service
+              predicates:
+                - Path=/api/notification-service/v3/api-docs
+              filters:
+                - RewritePath=/api/notification-service/v3/api-docs, /v3/api-docs
             - id: user-service
               uri: lb://user-service
               predicates:
@@ -54,8 +90,33 @@ spring:
         ttl: 5s
         capacity: 256
     httpclient:
-      response-timeout: 10s
+      response-timeout: 15s
       connect-timeout: 5000
+resilience4j:
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 15s
+    instances:
+      user-service:
+        timeout-duration: 15s
+      admin-service:
+        timeout-duration: 15s
+      doctor-service:
+        timeout-duration: 15s
+      patient-service:
+        timeout-duration: 15s
+      appointment-service:
+        timeout-duration: 15s
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+        slow-call-duration-threshold: 10s
+        slow-call-rate-threshold: 80
 server:
   port: 8080
 eureka:
@@ -72,3 +133,19 @@ management:
     web:
       exposure:
         include: health,info
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: User Service
+        url: /api/user-service/v3/api-docs
+      - name: Admin Service
+        url: /api/admin-service/v3/api-docs
+      - name: Doctor Service
+        url: /api/doctor-service/v3/api-docs
+      - name: Patient Service
+        url: /api/patient-service/v3/api-docs
+      - name: Appointment Service
+        url: /api/appointment-service/v3/api-docs
+      - name: Notification Service
+        url: /api/notification-service/v3/api-docs

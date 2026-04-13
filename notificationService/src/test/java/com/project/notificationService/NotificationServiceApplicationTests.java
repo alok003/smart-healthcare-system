@@ -1,6 +1,7 @@
 package com.project.notificationService;
 
 import com.project.notificationService.Service.EmailService;
+import com.project.notificationService.Service.KafkaListenerNotification;
 import com.project.notificationService.Utility.LogUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,8 +10,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
+import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import jakarta.mail.internet.MimeMessage;
 import java.util.List;
@@ -30,10 +31,13 @@ class NotificationServiceApplicationTests {
     private MockMvc mockMvc;
 
     @MockitoBean
+    private KafkaListenerNotification kafkaListenerNotification;
+
+    @MockitoBean
     private JavaMailSender mailSender;
 
     @MockitoBean
-    private TemplateEngine templateEngine;
+    private SpringTemplateEngine templateEngine;
 
     // --- health ---
 

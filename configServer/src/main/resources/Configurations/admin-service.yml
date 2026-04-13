@@ -80,3 +80,12 @@ resilience4j:
         wait-duration: 500ms
         retry-exceptions:
           - feign.FeignException
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+  info:
+    title: Admin Service API
+    description: Smart Healthcare System - Admin Service
+    version: 1.0.0

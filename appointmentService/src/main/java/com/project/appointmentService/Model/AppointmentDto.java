@@ -1,10 +1,10 @@
 package com.project.appointmentService.Model;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
-import java.time.Instant;
 import java.time.LocalDate;
 
 @Data
@@ -13,13 +13,12 @@ import java.time.LocalDate;
 public class AppointmentDto {
     private String id;
     private String patientId;
+    @NotNull(message = "doctorId is required")
     private String doctorId;
     private Status status;
     private String subject;
     private String description;
+    @NotNull(message = "date is required")
     private LocalDate date;
     private VisitDetails visitDetails;
-    private Instant createdAt;
-    private Instant updatedAt;
-    private String lastModifiedBy;
 }

@@ -1,11 +1,9 @@
 package com.project.doctorService.Model;
 
-
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.FieldType;
 
 import java.time.LocalDate;
 
@@ -15,11 +13,12 @@ import java.time.LocalDate;
 public class AppointmentDto {
     private String id;
     private String patientId;
+    @NotNull(message = "doctorId is required")
     private String doctorId;
-    @Field(targetType = FieldType.STRING)
     private Status status;
     private String subject;
     private String description;
+    @NotNull(message = "date is required")
     private LocalDate date;
     private VisitDetails visitDetails;
 }

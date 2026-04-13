@@ -60,9 +60,6 @@ class AppointmentControllerTest {
         return a;
     }
 
-    private static final String PATIENT_EMAIL = "patient@example.com";
-    private static final String PATIENT_ROLE = "PATIENT";
-
     // --- health ---
 
     @Test
@@ -78,7 +75,6 @@ class AppointmentControllerTest {
     void bookAppointment_success() throws Exception {
         Appointment saved = buildAppointment("appt-1", Status.UPCOMING);
         when(appointmentRepository.save(any(Appointment.class))).thenReturn(saved);
-        when(kafkaTemplate.send(any(Message.class))).thenReturn(CompletableFuture.completedFuture(null));
 
         AppointmentDto dto = new AppointmentDto();
         dto.setPatientId("patient@example.com");
@@ -112,51 +108,88 @@ class AppointmentControllerTest {
                 .andExpect(status().isForbidden());
     }
 
-    // --- cancelAppointment ---
+    // --- markCancelled ---
 
     @Test
-    void cancelAppointment_success_byAdmin() throws Exception {
+    void markCancelled_success() throws Exception {
         Appointment existing = buildAppointment("appt-1", Status.UPCOMING);
-        Appointment cancelled = buildAppointment("appt-1", Status.CANCELLED);
         when(appointmentRepository.findById("appt-1")).thenReturn(Optional.of(existing));
-        when(appointmentRepository.save(any(Appointment.class))).thenReturn(cancelled);
-        when(kafkaTemplate.send(any(Message.class))).thenReturn(CompletableFuture.completedFuture(null));
+        when(appointmentRepository.save(any(Appointment.class))).thenReturn(existing);
 
-        mockMvc.perform(delete("/api/appointment-service/secure/cancelAppointment/appt-1")
+        mockMvc.perform(put("/api/appointment-service/secure/markCancelled/appt-1")
+                        .param("cancelledBy", "patient@example.com")
                         .header("X-User-Email", ADMIN_EMAIL)
                         .header("X-User-Role", ADMIN_ROLE))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("CANCELLED"));
+                .andExpect(status().isNoContent());
     }
 
     @Test
-    void cancelAppointment_success_byPatient() throws Exception {
-        Appointment existing = buildAppointment("appt-1", Status.UPCOMING);
-        Appointment cancelled = buildAppointment("appt-1", Status.CANCELLED);
-        when(appointmentRepository.findById("appt-1")).thenReturn(Optional.of(existing));
-        when(appointmentRepository.save(any(Appointment.class))).thenReturn(cancelled);
-        when(kafkaTemplate.send(any(Message.class))).thenReturn(CompletableFuture.completedFuture(null));
-
-        mockMvc.perform(delete("/api/appointment-service/secure/cancelAppointment/appt-1")
-                        .header("X-User-Email", PATIENT_EMAIL)
-                        .header("X-User-Role", PATIENT_ROLE))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("CANCELLED"));
-    }
-
-    @Test
-    void cancelAppointment_notFound_returns404() throws Exception {
+    void markCancelled_notFound_returns404() throws Exception {
         when(appointmentRepository.findById("nonexistent")).thenReturn(Optional.empty());
 
-        mockMvc.perform(delete("/api/appointment-service/secure/cancelAppointment/nonexistent")
+        mockMvc.perform(put("/api/appointment-service/secure/markCancelled/nonexistent")
+                        .param("cancelledBy", "patient@example.com")
                         .header("X-User-Email", ADMIN_EMAIL)
                         .header("X-User-Role", ADMIN_ROLE))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    void cancelAppointment_unauthorized_returns403() throws Exception {
-        mockMvc.perform(delete("/api/appointment-service/secure/cancelAppointment/appt-1")
+    void markCancelled_unauthorized_returns403() throws Exception {
+        mockMvc.perform(put("/api/appointment-service/secure/markCancelled/appt-1")
+                        .param("cancelledBy", "patient@example.com")
+                        .header("X-User-Email", USER_EMAIL)
+                        .header("X-User-Role", USER_ROLE))
+                .andExpect(status().isForbidden());
+    }
+
+    // --- restoreAppointment ---
+
+    @Test
+    void restoreAppointment_success() throws Exception {
+        Appointment existing = buildAppointment("appt-1", Status.CANCELLED);
+        when(appointmentRepository.findById("appt-1")).thenReturn(Optional.of(existing));
+        when(appointmentRepository.save(any(Appointment.class))).thenReturn(existing);
+
+        mockMvc.perform(put("/api/appointment-service/secure/restoreAppointment/appt-1")
+                        .header("X-User-Email", ADMIN_EMAIL)
+                        .header("X-User-Role", ADMIN_ROLE))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void restoreAppointment_unauthorized_returns403() throws Exception {
+        mockMvc.perform(put("/api/appointment-service/secure/restoreAppointment/appt-1")
+                        .header("X-User-Email", USER_EMAIL)
+                        .header("X-User-Role", USER_ROLE))
+                .andExpect(status().isForbidden());
+    }
+
+    // --- deleteAppointment ---
+
+    @Test
+    void deleteAppointment_success() throws Exception {
+        when(appointmentRepository.existsById("appt-1")).thenReturn(true);
+
+        mockMvc.perform(delete("/api/appointment-service/secure/deleteAppointment/appt-1")
+                        .header("X-User-Email", ADMIN_EMAIL)
+                        .header("X-User-Role", ADMIN_ROLE))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void deleteAppointment_notFound_returns404() throws Exception {
+        when(appointmentRepository.existsById("nonexistent")).thenReturn(false);
+
+        mockMvc.perform(delete("/api/appointment-service/secure/deleteAppointment/nonexistent")
+                        .header("X-User-Email", ADMIN_EMAIL)
+                        .header("X-User-Role", ADMIN_ROLE))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void deleteAppointment_unauthorized_returns403() throws Exception {
+        mockMvc.perform(delete("/api/appointment-service/secure/deleteAppointment/appt-1")
                         .header("X-User-Email", USER_EMAIL)
                         .header("X-User-Role", USER_ROLE))
                 .andExpect(status().isForbidden());

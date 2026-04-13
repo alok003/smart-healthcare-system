@@ -1,6 +1,5 @@
 package com.project.adminService.RESTCalls;
 
-import com.project.adminService.Model.ChangeRequest;
 import com.project.adminService.Model.DoctorDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;

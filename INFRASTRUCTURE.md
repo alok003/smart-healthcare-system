@@ -1,151 +1,106 @@
-# Smart Healthcare System - Infrastructure Documentation
+# Smart Healthcare System — Infrastructure Documentation
 
-Complete guide for infrastructure setup, deployment, and configuration.
+Complete guide for infrastructure setup, deployment, configuration, and operations.
+
+---
 
 ## Table of Contents
-- [Infrastructure Components](#infrastructure-components)
+- [Architecture Overview](#architecture-overview)
 - [Service Port Mapping](#service-port-mapping)
 - [Docker Setup](#docker-setup)
 - [Database Configuration](#database-configuration)
-- [Build & Deployment](#build--deployment)
 - [Environment Variables](#environment-variables)
+- [Build & Deployment](#build--deployment)
 - [Networking](#networking)
+- [Log Management](#log-management)
+- [Schedulers](#schedulers)
 - [Troubleshooting](#troubleshooting)
 
 ---
 
-## Infrastructure Components
-
-### Service Architecture
+## Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    Client / Browser                      │
-└────────────────────┬────────────────────────────────────┘
-                     │
-                     ▼
-┌─────────────────────────────────────────────────────────┐
-│              API Gateway (8080)                          │
-│              - JWT Validation                            │
-│              - Request Routing                           │
-└────────────────────┬────────────────────────────────────┘
-                     │
-        ┌────────────┴────────────┐
-        ▼                         ▼
-┌──────────────┐          ┌──────────────┐
-│ Eureka Server│          │ Config Server│
-│    (8761)    │          │    (8888)    │
-└──────────────┘          └──────────────┘
-        │
-        ▼
-┌─────────────────────────────────────────────────────────┐
-│              Business Services                           │
-│  User(8010) Admin(8011) Doctor(8012) Patient(8013)     │
-│  Appointment(8014) Notification(8015)                   │
-└────────────────────┬────────────────────────────────────┘
-                     │
-        ┌────────────┴────────────┐
-        ▼                         ▼
-┌──────────────┐          ┌──────────────┐
-│ MySQL        │          │ MongoDB      │
-│ (localhost)  │          │ (localhost)  │
-└──────────────┘          └──────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│                      Client / Browser                         │
+└───────────────────────────┬──────────────────────────────────┘
+                            │
+                            ▼
+┌──────────────────────────────────────────────────────────────┐
+│                   API Gateway (8080)                          │
+│         JWT Validation · Routing · Correlation IDs           │
+└──────┬──────────────────────────────────────────────┬────────┘
+       │                                              │
+       ▼                                              ▼
+┌─────────────┐                             ┌──────────────────┐
+│Config Server│                             │  Eureka Server   │
+│   (8888)    │                             │     (8761)       │
+└─────────────┘                             └──────────────────┘
+                                                     │
+                    ┌────────────────────────────────┤
+                    │                                │
+          ┌─────────▼──────────┐          ┌─────────▼──────────┐
+          │  Business Services │          │  Messaging Layer    │
+          │  User     (8010)   │          │  Zookeeper  (2181)  │
+          │  Admin    (8011)   │          │  Kafka      (9092)  │
+          │  Doctor   (8012)   │          │  Kafka UI   (9090)  │
+          │  Patient  (8013)   │          └────────────────────┘
+          │  Appointment(8014) │
+          │  Notification(8015)│
+          └────────┬───────────┘
+                   │
+       ┌───────────┴───────────┐
+       ▼                       ▼
+┌─────────────┐         ┌─────────────┐
+│    MySQL    │         │   MongoDB   │
+│  (3306)     │         │  (27017)    │
+│ userservice │         │ smart-      │
+│             │         │ healthcare- │
+│             │         │ service     │
+└─────────────┘         └─────────────┘
 ```
-
-### Infrastructure Services
-
-#### Config Server (Port 8888)
-**Purpose:** Centralized configuration management
-
-**Features:**
-- Stores configuration for all services
-- Native profile (classpath-based)
-- Configuration files in `src/main/resources/Configurations/`
-- No Eureka registration (runs independently)
-
-**Health Check:** http://localhost:8888/actuator/health
-
-#### Eureka Server (Port 8761)
-**Purpose:** Service discovery and registration
-
-**Features:**
-- Service registry for all microservices
-- Health monitoring
-- Load balancing support
-- Dashboard UI
-
-**Dashboard:** http://localhost:8761
-
-#### API Gateway (Port 8080)
-**Purpose:** Single entry point for all client requests
-
-**Features:**
-- JWT token validation
-- Request routing to services
-- Security filtering
-- Header propagation (X-User-Email, X-User-Role)
-
-**Routes:**
-```
-/api/user-service/**       → user-service
-/api/admin-service/**      → admin-service
-/api/doctor-service/**     → doctor-service
-/api/patient-service/**    → patient-service
-/api/appointment-service/** → appointment-service
-```
-
-**Security:**
-- `/open/*` - Public endpoints (no authentication)
-- `/secure/*` - Protected endpoints (JWT required)
 
 ---
 
 ## Service Port Mapping
 
-### Complete Port Reference
-
-| Service | Container | Internal | External | Network Name |
-|---------|-----------|----------|----------|--------------|
-| **Infrastructure** |
-| Config Server | config-server | 8888 | 8888 | config-server |
-| Eureka Server | eureka-server | 8761 | 8761 | eureka-server |
-| API Gateway | gateway | 8080 | 8080 | gateway |
-| **Business Services** |
-| User Service | user-service | 8010 | 8010 | user-service |
-| Admin Service | admin-service | 8011 | 8011 | admin-service |
-| Doctor Service | doctor-service | 8012 | 8012 | doctor-service |
-| Patient Service | patient-service | 8013 | 8013 | patient-service |
-| Appointment Service | appointment-service | 8014 | 8014 | appointment-service |
-| Notification Service | notification-service | 8015 | 8015 | notification-service |
-| **Messaging** |
-| Zookeeper | zookeeper | 2181 | 2181 | zookeeper |
-| Kafka | kafka | 9092 | 9092 | kafka |
-| Kafka UI | kafka-ui | 8080 | 9090 | kafka-ui |
-| **Databases (Host)** |
-| MySQL | - | 3306 | 3306 | localhost |
-| MongoDB | - | 27017 | 27017 | localhost |
+| Service | Container Name | Port | Database |
+|---|---|---|---|
+| Config Server | config-server | 8888 | — |
+| Eureka Server | eureka-server | 8761 | — |
+| API Gateway | gateway | 8080 | — |
+| User Service | user-service | 8010 | MySQL |
+| Admin Service | admin-service | 8011 | MongoDB |
+| Doctor Service | doctor-service | 8012 | MongoDB |
+| Patient Service | patient-service | 8013 | MongoDB |
+| Appointment Service | appointment-service | 8014 | MongoDB |
+| Notification Service | notification-service | 8015 | — |
+| Zookeeper | zookeeper | 2181 | — |
+| Kafka | kafka | 9092 | — |
+| Kafka UI | kafka-ui | 9090 | — |
+| MySQL | — (host) | 3306 | — |
+| MongoDB | — (host) | 27017 | — |
 
 ### Access URLs
 
-**From Browser (localhost):**
+**From browser:**
 ```
-Config Server:        http://localhost:8888/actuator/health
 Eureka Dashboard:     http://localhost:8761
-API Gateway:          http://localhost:8080
-User Service:         http://localhost:8010/actuator/health
-Admin Service:        http://localhost:8011/actuator/health
-Doctor Service:       http://localhost:8012/actuator/health
-Patient Service:      http://localhost:8013/actuator/health
-Appointment Service:  http://localhost:8014/actuator/health
-Notification Service: http://localhost:8015/actuator/health
 Kafka UI:             http://localhost:9090
+Config Server:        http://localhost:8888/actuator/health
+API Gateway:          http://localhost:8080/actuator/health
+User Service:         http://localhost:8080/api/user-service/open/health
+Admin Service:        http://localhost:8080/api/admin-service/open/health
+Doctor Service:       http://localhost:8080/api/doctor-service/open/health
+Patient Service:      http://localhost:8080/api/patient-service/open/health
+Appointment Service:  http://localhost:8080/api/appointment-service/open/health
+Notification Service: http://localhost:8080/api/notification-service/open/health
 ```
 
-**From Docker Network:**
+**From Docker network (container-to-container):**
 ```
 config-server:8888
 eureka-server:8761
-gateway:8080
 user-service:8010
 admin-service:8011
 doctor-service:8012
@@ -162,363 +117,376 @@ zookeeper:2181
 
 ### Prerequisites
 - Docker Desktop installed and running
-- MySQL running on localhost:3306
-- MongoDB running on localhost:27017
-- All services built (JAR files in target/ folders)
+- MySQL running on `localhost:3306`
+- MongoDB running on `localhost:27017`
+- All services built (JAR files present in `target/` folders)
+- `Vault.env` file present in root directory
 
-### Build All Services
-```bash
-build-infrastructure.bat
+### Startup Order
+
+Docker Compose enforces this dependency chain:
+
 ```
-
-**Build Time:** ~5-10 minutes for all services
-
-### Docker Compose Configuration
-
-**Network:**
-- Name: `healthcare-network`
-- Type: Bridge
-- All containers communicate via this network
-
-**Startup Order:**
-```
-1. Config Server (independent)
-   ↓ (waits for health check)
-2. Eureka Server
-   ↓ (waits for health check)
-3. Gateway + Zookeeper (parallel)
-   ↓
-4. Kafka + All Business Services (parallel)
-   ↓
-5. Kafka UI
+Config Server (health check)
+    ↓
+Eureka Server (health check)
+    ↓
+Gateway + Zookeeper (parallel)
+    ↓
+Kafka
+    ↓
+All Business Services + Kafka UI (parallel)
 ```
 
 ### Docker Commands
 
-**Start All Services:**
 ```bash
+# Start all services
 docker compose up -d
-```
 
-**Start Specific Services:**
-```bash
-# Infrastructure only
-docker compose up -d config-server eureka-server gateway
+# Start infrastructure only
+docker compose up -d config-server eureka-server gateway zookeeper kafka kafka-ui
 
-# Add specific business service
-docker compose up -d user-service doctor-service
-```
+# Start specific business service
+docker compose up -d user-service
 
-**View Logs:**
-```bash
-# All services
+# View logs (all)
 docker compose logs -f
 
-# Specific service
-docker compose logs -f user-service
-```
+# View logs (specific service)
+docker compose logs -f notification-service
 
-**Check Status:**
-```bash
+# Check status
 docker compose ps
-```
 
-**Stop Services:**
-```bash
 # Stop all
 docker compose down
 
 # Stop specific service
-docker compose stop user-service
+docker compose stop doctor-service
+
+# Restart specific service
+docker compose restart patient-service
+
+# Rebuild and restart after code change
+cd <serviceName>
+mvnw clean package
+cd ..
+docker compose up -d --build <service-name>
 ```
 
-**Rebuild After Code Changes:**
-```bash
-cd userService
-mvnw clean package -DskipTests
-cd ..
-docker compose up -d --build user-service
-```
+### Memory Allocation
+
+| Service | Memory Limit | Reservation |
+|---|---|---|
+| Config Server | 384M | 256M |
+| Eureka Server | 384M | 256M |
+| API Gateway | 512M | 384M |
+| User Service | 512M | 384M |
+| Admin Service | 384M | 256M |
+| Doctor Service | 384M | 256M |
+| Patient Service | 384M | 256M |
+| Appointment Service | 384M | 256M |
+| Notification Service | 384M | 256M |
+| Kafka | 768M | 512M |
+| Zookeeper | 256M | 192M |
+| Kafka UI | 256M | 128M |
 
 ---
 
 ## Database Configuration
 
-### MySQL (User Service)
+### MySQL — User Service
 
-**Connection Details:**
-- Host: localhost
-- Port: 3306
-- Database: userservice
-- Username: From Vault.env (DATABASE_USERNAME)
-- Password: From Vault.env (DATABASE_PASS)
+```
+Host:     localhost (host.docker.internal from containers)
+Port:     3306
+Database: userservice
+Username: ${DATABASE_USERNAME} from Vault.env
+Password: ${DATABASE_PASS} from Vault.env
+```
 
 **Setup:**
 ```sql
 CREATE DATABASE userservice;
 ```
 
-**From Docker Containers:**
-- Host: `host.docker.internal`
-- Port: 3306
-- Configured via `MYSQL_HOST` environment variable
+**Schema:** Auto-created by Hibernate (`spring.jpa.hibernate.ddl-auto=update`)
 
-**Workbench Connection:**
+**Table:** `users` — userId (UUID), userEmail, userPassword, userName, userAge, userRole, createdAt, updatedAt
+
+### MongoDB — All Other Services
+
 ```
-Hostname: localhost
-Port: 3306
-Username: root
-Password: root
+Host:     localhost (host.docker.internal from containers)
+Port:     27017
+Database: smart-healthcare-service
+Auth:     None (development)
 ```
-
-### MongoDB (All Other Services)
-
-**Connection Details:**
-- Host: localhost
-- Port: 27017
-- Database: smart-healthcare-service
-- No authentication (development)
 
 **Collections:**
-- Doctors
-- Patients
-- Appointments
-- RequestRoles (Admin Service)
 
-**From Docker Containers:**
-- Host: `host.docker.internal`
-- Port: 27017
-- Configured via `MONGO_HOST` environment variable
+| Collection | Service | Key Fields |
+|---|---|---|
+| `Doctors` | doctorService | email, gender, specializations, bookings, licenseNumber |
+| `Patients` | patientService | email, name, dateOfBirth, gender, appointmentList, vitalsFlow |
+| `Appointments` | appointmentService | patientId, doctorId, status, date, visitDetails, description |
+| `Requests` | adminService | userEmail, userRole, requestStatus, doctorDto, patientDto |
 
-**Compass Connection:**
-```
-Connection String: mongodb://localhost:27017
-```
-
----
-
-## Build & Deployment
-
-### Build Process
-
-**Automated Build:**
-```bash
-build-infrastructure.bat
-```
-
-**Manual Build:**
-```bash
-cd <serviceName>
-mvnw clean package -DskipTests
-cd ..
-```
-
-### Deployment Steps
-
-**Step 1: Prerequisites Check**
-```bash
-# Check Java version
-java -version  # Should be 17
-
-# Check Docker
-docker --version
-
-# Check databases running on localhost:3306 and localhost:27017
-```
-
-**Step 2: Build Services**
-```bash
-build-infrastructure.bat
-```
-
-**Step 3: Start Infrastructure**
-```bash
-docker compose up -d config-server eureka-server gateway
-```
-
-**Step 4: Verify Infrastructure**
-- Wait 30 seconds
-- Check Eureka: http://localhost:8761
-
-**Step 5: Start Business Services**
-```bash
-docker compose up -d
-```
-
-**Step 6: Verify All Services**
-- Wait 1-2 minutes for registration
-- Check Eureka dashboard - all services should appear
+**Auditing:** `@EnableMongoAuditing` active on all MongoDB services — `createdAt`, `updatedAt`, `lastModifiedBy` auto-populated.
 
 ---
 
 ## Environment Variables
 
-### Vault.env File
+### Vault.env
 
-**Location:** Root directory
-
-**Contents:**
 ```env
 DATABASE_USERNAME=root
 DATABASE_PASS=root
-SECRET_KEY=asdfghjkqwertyuiomnbfre3456789{}{}
+SECRET_KEY=your-jwt-secret-key-min-32-chars
 EXPIRATION=43200000
+EMAIL_USERNAME=your-email@gmail.com
+EMAIL_PASSWORD=your-app-password
 ```
 
-### Variable Usage
+> For Gmail: generate an App Password at https://myaccount.google.com/apppasswords (requires 2FA enabled)
 
-#### SECRET_KEY
-**Used By:** Gateway, User Service
-**Purpose:** JWT token signing and validation
+### Variable Reference
 
-#### EXPIRATION
-**Used By:** User Service
-**Purpose:** JWT token expiration time (milliseconds)
+| Variable | Used By | Purpose |
+|---|---|---|
+| `DATABASE_USERNAME` | user-service | MySQL username |
+| `DATABASE_PASS` | user-service | MySQL password |
+| `SECRET_KEY` | gateway, user-service | JWT signing key |
+| `EXPIRATION` | user-service | JWT expiry in milliseconds (43200000 = 12h) |
+| `EMAIL_USERNAME` | notification-service | SMTP sender address |
+| `EMAIL_PASSWORD` | notification-service | SMTP password / app password |
 
-#### DATABASE_USERNAME
-**Used By:** User Service
-**Purpose:** MySQL connection username
+### Docker Environment Variables (set in docker-compose.yml)
 
-#### DATABASE_PASS
-**Used By:** User Service
-**Purpose:** MySQL connection password
+| Variable | Value in Docker | Default (local) |
+|---|---|---|
+| `CONFIG_HOST` | `config-server` | `localhost` |
+| `EUREKA_HOST` | `eureka-server` | `localhost` |
+| `MYSQL_HOST` | `host.docker.internal` | `localhost` |
+| `MONGO_HOST` | `host.docker.internal` | `localhost` |
+| `KAFKA_HOST` | `kafka` | `localhost` |
 
-### Docker Environment Variables
+---
 
-#### CONFIG_HOST
-**Set For:** Eureka, Gateway, All Business Services
-**Value:** `config-server` (Docker network name)
-**Default:** localhost
+## Build & Deployment
 
-#### EUREKA_HOST
-**Set For:** Gateway, All Business Services
-**Value:** `eureka-server` (Docker network name)
-**Default:** localhost
+### Build All Services
+```bash
+build-infrastructure.bat
+```
 
-#### MYSQL_HOST
-**Set For:** User Service
-**Value:** `host.docker.internal`
-**Default:** localhost
+This runs `mvnw clean package` (with tests) for all 9 services in order. Build time: ~5-10 minutes.
 
-#### MONGO_HOST
-**Set For:** Admin, Doctor, Patient, Appointment Services
-**Value:** `host.docker.internal`
-**Default:** localhost
+> Infrastructure services (eurekaServer, gateway) use `-DskipTests` as they have no business logic tests.
+
+### Build Individual Service
+```bash
+cd <serviceName>
+mvnw clean package
+cd ..
+```
+
+### Full Deployment Steps
+
+```bash
+# 1. Verify prerequisites
+java -version          # must be 17
+docker --version
+# ensure MySQL on :3306 and MongoDB on :27017
+
+# 2. Create Vault.env in root directory
+
+# 3. Create MySQL database
+# mysql -u root -p -e "CREATE DATABASE userservice;"
+
+# 4. Build all services
+build-infrastructure.bat
+
+# 5. Start all services
+docker compose up -d
+
+# 6. Wait ~2 minutes, then verify
+# http://localhost:8761 — all 6 business services should appear
+# http://localhost:9090 — Kafka UI
+```
+
+### Rebuild Single Service After Code Change
+```bash
+cd userService
+mvnw clean package
+cd ..
+docker compose up -d --build user-service
+```
 
 ---
 
 ## Networking
 
-### Docker Network: healthcare-network
+### Docker Network: `healthcare-network`
 
-**Type:** Bridge
-**Features:**
-- Container-to-container communication
-- DNS resolution by container name
-- Access to host via `host.docker.internal`
-
-### Service Discovery
-
-**Within Docker Network:**
-- Services use container names as hostnames
-- Example: `http://user-service:8010`
-- Eureka provides service registry
-
-**From Host Machine:**
-- Services accessible via localhost
-- Example: `http://localhost:8010`
+- **Type:** Bridge
+- **DNS:** Container names resolve automatically within the network
+- **Host access:** `host.docker.internal` resolves to the host machine
 
 ### Host Access from Containers
 
-**Configuration:**
+Services that need MySQL or MongoDB use:
 ```yaml
 extra_hosts:
   - "host.docker.internal:host-gateway"
 ```
 
-**Usage:**
-- MySQL: `host.docker.internal:3306`
-- MongoDB: `host.docker.internal:27017`
+This is configured for: user-service, admin-service, doctor-service, patient-service, appointment-service.
+
+### Inter-Service Communication
+
+All service-to-service calls go through Eureka service discovery:
+- Feign clients use service names (e.g., `@FeignClient(name = "doctor-service")`)
+- Eureka resolves to the actual container IP
+- Resilience4j Circuit Breaker + Retry wraps all Feign calls
+
+---
+
+## Log Management
+
+### Log Directories
+
+Each service writes logs to `/app/logs` inside the container, mounted to the host:
+
+| Service | Host Path |
+|---|---|
+| gateway | `./logs/gateway/` |
+| user-service | `./logs/user-service/` |
+| admin-service | `./logs/admin-service/` |
+| doctor-service | `./logs/doctor-service/` |
+| patient-service | `./logs/patient-service/` |
+| appointment-service | `./logs/appointment-service/` |
+| notification-service | `./logs/notification-service/` |
+
+### Log Format
+
+All services use structured logging with MDC:
+```
+action=<ACTION> status=<STATUS> identifier=<EMAIL_OR_ID> ...
+```
+
+### Correlation IDs
+
+Every HTTP request gets a `X-Correlation-ID` header (generated at gateway if not present). This ID is:
+- Propagated to all downstream Feign calls via `FeignCorrelationInterceptor`
+- Included in all Kafka message headers
+- Set in MDC by each Kafka listener
+- Included in all log lines via MDC key `correlationId`
+
+---
+
+## Schedulers
+
+Both schedulers run in **doctorService**:
+
+| Scheduler | Cron | What it does |
+|---|---|---|
+| `refreshBookingSchedules` | `0 0 0 * * *` (midnight) | Removes past dates, adds new dates to maintain 31-day rolling window for all doctors |
+| `sendDailyScheduleNotification` | `0 5 0 * * *` (00:05) | Publishes `doctor-daily-schedule` Kafka event for each doctor with appointments tomorrow |
+
+The 5-minute gap ensures `refreshBookingSchedules` completes before the notification scheduler reads the updated schedule.
 
 ---
 
 ## Troubleshooting
 
-### Common Issues
+### Services Not Starting
 
-#### 1. Services Not Starting
-
-**Solutions:**
 ```bash
 # Check logs
 docker compose logs <service-name>
 
-# Check if JAR exists
-ls <serviceName>/target/*.jar
+# Verify JAR exists
+dir <serviceName>\target\*.jar
 
-# Rebuild service
+# Rebuild
 cd <serviceName>
-mvnw clean package -DskipTests
+mvnw clean package
+cd ..
+docker compose up -d --build <service-name>
 ```
 
-#### 2. Service Not Registering with Eureka
+### Service Not Registering with Eureka
 
-**Solutions:**
-- Wait 1-2 minutes (registration takes time)
+- Wait 1-2 minutes — Eureka registration has a heartbeat delay
 - Check service logs: `docker compose logs -f <service-name>`
-- Restart service: `docker compose restart <service-name>`
+- Verify Config Server is healthy: http://localhost:8888/actuator/health
+- Restart: `docker compose restart <service-name>`
 
-#### 3. Database Connection Failed
+### Database Connection Failed
 
-**Solutions:**
 ```bash
-# Check if databases are running
-# MySQL: localhost:3306
-# MongoDB: localhost:27017
-
-# Verify host.docker.internal
+# Verify host.docker.internal resolves
 docker compose exec user-service ping host.docker.internal
 
-# Check Vault.env credentials
+# Check MySQL is running on host
+# Check MongoDB is running on host
+
+# Verify Vault.env credentials
 ```
 
-#### 4. Port Already in Use
+### Kafka Issues
 
-**Solutions:**
 ```bash
-# Find process using port (Windows)
-netstat -ano | findstr :8080
+# Check Kafka is running
+docker compose ps kafka
+
+# View Kafka logs
+docker compose logs kafka
+
+# Check topics in Kafka UI
+# http://localhost:9090
+```
+
+### Email Not Sending
+
+- Verify `EMAIL_USERNAME` and `EMAIL_PASSWORD` in `Vault.env`
+- For Gmail: use an App Password (not your account password)
+- Check notification-service logs: `docker compose logs -f notification-service`
+
+### Port Already in Use
+
+```bash
+# Find process (Windows)
+netstat -ano | findstr :<port>
 
 # Kill process
-taskkill /PID <process-id> /F
+taskkill /PID <pid> /F
 ```
-
-#### 5. Config Server Not Found
-
-**Solutions:**
-- Ensure Config Server is healthy: http://localhost:8888/actuator/health
-- Check Config Server logs: `docker compose logs config-server`
-- Restart dependent services after Config Server is healthy
 
 ### Diagnostic Commands
 
 ```bash
-# Check all container status
+# All container status
 docker compose ps
 
-# View resource usage
+# Resource usage
 docker stats
 
-# Check network connectivity
+# Network connectivity
 docker compose exec user-service ping config-server
+docker compose exec user-service ping kafka
 
-# Access container shell
+# Container shell
 docker compose exec user-service sh
 
-# View environment variables
+# Environment variables in container
 docker compose exec user-service env
 ```
 
 ---
 
-**For general project information and quick start guide, see [README.md](README.md)**
+**For general project information and quick start, see [README.md](README.md)**
+**For end-to-end flow documentation, see [FLOW.md](FLOW.md)**

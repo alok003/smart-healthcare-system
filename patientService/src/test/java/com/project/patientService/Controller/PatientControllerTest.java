@@ -230,7 +230,7 @@ class PatientControllerTest {
                         .header("X-User-Role", PATIENT_ROLE)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
-                .andExpect(status().isServiceUnavailable());
+                .andExpect(status().isInternalServerError());
     }
 
     @Test
@@ -264,17 +264,18 @@ class PatientControllerTest {
     @Test
     void cancelAppointment_success() throws Exception {
         Patient patient = buildPatient(PATIENT_EMAIL);
+        AppointmentDto appointment = buildAppointmentDto("appt-1");
         AppointmentDto cancelled = buildAppointmentDto("appt-1");
         cancelled.setStatus(Status.CANCELLED);
         when(patientRepository.findByEmail(PATIENT_EMAIL)).thenReturn(Optional.of(patient));
-        when(externalServiceClient.cancelAppointment(anyString(), anyString(), anyString())).thenReturn(cancelled);
+        when(externalServiceClient.getAppointmentById(eq("appt-1"), anyString(), anyString())).thenReturn(appointment);
         when(patientRepository.save(any(Patient.class))).thenReturn(patient);
+        when(kafkaTemplate.send(any(Message.class))).thenReturn(CompletableFuture.completedFuture(null));
 
         mockMvc.perform(delete("/api/patient-service/secure/cancelAppointment/appt-1")
                         .header("X-User-Email", PATIENT_EMAIL)
                         .header("X-User-Role", PATIENT_ROLE))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("CANCELLED"));
+                .andExpect(status().isOk());
     }
 
     @Test

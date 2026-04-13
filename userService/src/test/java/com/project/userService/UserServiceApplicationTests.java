@@ -86,7 +86,7 @@ class UserServiceApplicationTests {
         model.setUserEmail("test@example.com");
         model.setUserName("Test");
 
-        Map<String, Object> map = UtilityFunction.cnvDtoToMap(model);
+        Map<String, Object> map = UtilityFunctions.cnvDtoToMap(model);
 
         assertEquals("test@example.com", map.get("userEmail"));
         assertEquals("Test", map.get("userName"));

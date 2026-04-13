@@ -52,8 +52,9 @@ public class PatientService {
 
     public AppointmentDto bookAppointment(AppointmentDto appointmentDto, String email) throws PatientNotFoundException {
         log.info("action=BOOK_APPOINTMENT status=INITIATED identifier={} doctorId={} date={}", email, appointmentDto.getDoctorId(), appointmentDto.getDate());
-        Optional<Patient> patient = patientRepository.findByEmail(email);
-        if (patient.isEmpty()) throw new PatientNotFoundException(email);
+        Optional<Patient> patientOpt = patientRepository.findByEmail(email);
+        if (patientOpt.isEmpty()) throw new PatientNotFoundException(email);
+        Patient patient = patientOpt.get();
         DoctorDto doctor = externalServiceClient.getDoctorByEmail(appointmentDto.getDoctorId(), email, UserRole.ADMIN.name());
         log.debug("action=BOOK_APPOINTMENT detail=DOCTOR_FETCHED identifier={} doctorId={}", email, appointmentDto.getDoctorId());
         BookingList slot = doctor.getBookings().getBookingListMap().get(appointmentDto.getDate());
@@ -64,17 +65,33 @@ public class PatientService {
         appointmentDto.setPatientId(email);
         appointmentDto.setStatus(Status.UPCOMING);
         AppointmentDto saved = externalServiceClient.bookAppointment(appointmentDto, email, UserRole.ADMIN.name());
-        patient.get().getAppointmentList().add(saved.getId());
-        patientRepository.save(patient.get());
+        log.debug("action=BOOK_APPOINTMENT detail=APPOINTMENT_SAVED identifier={} appointmentId={}", email, saved.getId());
         try {
+            patient.getAppointmentList().add(saved.getId());
+            patientRepository.save(patient);
+            log.debug("action=BOOK_APPOINTMENT detail=PATIENT_UPDATED identifier={} appointmentId={}", email, saved.getId());
             externalServiceClient.addDocAppointment(saved, email, UserRole.ADMIN.name());
+            log.debug("action=BOOK_APPOINTMENT detail=DOCTOR_UPDATED identifier={} appointmentId={}", email, saved.getId());
         } catch (Exception e) {
-            log.error("action=BOOK_APPOINTMENT status=ROLLBACK identifier={} appointmentId={} reason=DOC_UPDATE_FAILED error={}", email, saved.getId(), e.getMessage());
-            externalServiceClient.cancelAppointment(saved.getId(), email, UserRole.ADMIN.name());
-            patient.get().getAppointmentList().remove(saved.getId());
-            patientRepository.save(patient.get());
-            throw new RuntimeException("Booking failed: unable to update doctor schedule. Appointment has been rolled back.");
+            log.error("action=BOOK_APPOINTMENT status=ROLLBACK identifier={} appointmentId={} reason={}", email, saved.getId(), e.getMessage());
+            try {
+                patient.getAppointmentList().remove(saved.getId());
+                patientRepository.save(patient);
+            } catch (Exception rollbackEx) {
+                log.error("action=BOOK_APPOINTMENT status=ROLLBACK_PARTIAL identifier={} appointmentId={} reason=PATIENT_ROLLBACK_FAILED error={}", email, saved.getId(), rollbackEx.getMessage());
+            }
+            try {
+                externalServiceClient.deleteAppointment(saved.getId(), email, UserRole.ADMIN.name());
+            } catch (Exception rollbackEx) {
+                log.error("action=BOOK_APPOINTMENT status=ROLLBACK_PARTIAL identifier={} appointmentId={} reason=DELETE_FAILED error={}", email, saved.getId(), rollbackEx.getMessage());
+            }
+            throw new RuntimeException("Booking failed due to an internal error. Please try again.");
         }
+        kafkaTemplate.send(MessageBuilder.withPayload(UtilityFunctions.cnvDtoToMap(saved))
+                .setHeader(KafkaHeaders.TOPIC, "appointment-booked")
+                .setHeader("X-Correlation-ID", MDC.get("correlationId"))
+                .build());
+        log.info("action=KAFKA_PUBLISH status=SUCCESS topic=appointment-booked identifier={} appointmentId={}", email, saved.getId());
         log.info("action=BOOK_APPOINTMENT status=SUCCESS identifier={} appointmentId={} doctorId={}", email, saved.getId(), saved.getDoctorId());
         return saved;
     }
@@ -88,11 +105,30 @@ public class PatientService {
             log.warn("action=CANCEL_APPOINTMENT status=REJECTED identifier={} requestedBy={} reason=NOT_OWNED", id, email);
             throw new PatientNotFoundException("Appointment does not belong to patient: " + email);
         }
-        AppointmentDto cancelled = externalServiceClient.cancelAppointment(id, email, UserRole.PATIENT.name());
+        AppointmentDto appointment = externalServiceClient.getAppointmentById(id, email, UserRole.ADMIN.name());
+        externalServiceClient.markCancelled(id, email, email, UserRole.ADMIN.name());
+        log.debug("action=CANCEL_APPOINTMENT detail=APPOINTMENT_MARKED_CANCELLED identifier={}", id);
+        try {
+            externalServiceClient.removeAppointmentFromSchedule(id, appointment.getDate().toString(), email, UserRole.ADMIN.name());
+            log.debug("action=CANCEL_APPOINTMENT detail=DOCTOR_SCHEDULE_UPDATED identifier={}", id);
+        } catch (Exception e) {
+            log.error("action=CANCEL_APPOINTMENT status=ROLLBACK identifier={} reason=DOCTOR_UPDATE_FAILED error={}", id, e.getMessage());
+            try {
+                externalServiceClient.restoreAppointment(id, email, UserRole.ADMIN.name());
+            } catch (Exception restoreEx) {
+                log.error("action=CANCEL_APPOINTMENT status=ROLLBACK_FAILED identifier={} reason=RESTORE_FAILED error={}", id, restoreEx.getMessage());
+            }
+            throw new RuntimeException("Cancellation failed: unable to update doctor schedule.");
+        }
         patient.getAppointmentList().remove(id);
         patientRepository.save(patient);
+        kafkaTemplate.send(MessageBuilder.withPayload(UtilityFunctions.cnvDtoToMap(appointment))
+                .setHeader(KafkaHeaders.TOPIC, "appointment-cancelled-notification")
+                .setHeader("X-Correlation-ID", MDC.get("correlationId"))
+                .build());
+        log.info("action=KAFKA_PUBLISH status=SUCCESS topic=appointment-cancelled-notification identifier={}", id);
         log.info("action=CANCEL_APPOINTMENT status=SUCCESS identifier={} requestedBy={}", id, email);
-        return cancelled;
+        return appointment;
     }
 
     public List<AppointmentDto> getAllAppointmentsbyPatient(String email) {
@@ -122,17 +158,17 @@ public class PatientService {
         return doctors;
     }
 
-    public void removeAppointmentFromList(String appointmentId, String patientId) {
-        log.info("action=REMOVE_APPOINTMENT_FROM_LIST status=INITIATED identifier={} patientId={}", appointmentId, patientId);
-        Optional<Patient> patientOpt = patientRepository.findByEmail(patientId);
+    public void removeAppointmentFromPatientByAppointmentId(String appointmentId) {
+        log.info("action=REMOVE_APPOINTMENT_FROM_PATIENT status=INITIATED identifier={}", appointmentId);
+        Optional<Patient> patientOpt = patientRepository.findByAppointmentListContaining(appointmentId);
         if (patientOpt.isEmpty()) {
-            log.warn("action=REMOVE_APPOINTMENT_FROM_LIST status=SKIPPED identifier={} reason=PATIENT_NOT_FOUND", patientId);
+            log.warn("action=REMOVE_APPOINTMENT_FROM_PATIENT status=SKIPPED identifier={} reason=PATIENT_NOT_FOUND", appointmentId);
             return;
         }
         Patient patient = patientOpt.get();
         patient.getAppointmentList().remove(appointmentId);
         patientRepository.save(patient);
-        log.info("action=REMOVE_APPOINTMENT_FROM_LIST status=SUCCESS identifier={} patientId={}", appointmentId, patientId);
+        log.info("action=REMOVE_APPOINTMENT_FROM_PATIENT status=SUCCESS identifier={} patientId={}", appointmentId, patient.getEmail());
     }
 
     public void updatePatientVitals(String appointmentId, String patientId, String dateStr, Map<String, Object> healthCheckMap) {

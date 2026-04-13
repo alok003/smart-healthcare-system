@@ -52,7 +52,7 @@ cd ..
 
 echo [9/9] Building Notification Service...
 cd notificationService
-call mvnw.cmd clean package -DskipTests
+call mvnw.cmd clean package
 if %errorlevel% neq 0 exit /b %errorlevel%
 cd ..
 

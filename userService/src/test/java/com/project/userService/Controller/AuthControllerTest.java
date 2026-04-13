@@ -183,7 +183,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void addNewUser_kafkaFailure_rollsBackAndReturns503() throws Exception {
+    void addNewUser_kafkaDown_stillReturns201() throws Exception {
         User saved = buildUser("new@example.com", "password123");
         when(userRepository.existsByUserEmail("new@example.com")).thenReturn(false);
         when(userRepository.save(any(User.class))).thenReturn(saved);
@@ -199,7 +199,7 @@ class AuthControllerTest {
         mockMvc.perform(post("/api/user-service/open/newUser")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(userModel)))
-                .andExpect(status().isServiceUnavailable());
+                .andExpect(status().isCreated());
     }
 
     @Test

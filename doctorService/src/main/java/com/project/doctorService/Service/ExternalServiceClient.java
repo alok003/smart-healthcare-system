@@ -3,6 +3,7 @@ package com.project.doctorService.Service;
 import com.project.doctorService.Model.AppointmentDto;
 import com.project.doctorService.Model.VisitDetails;
 import com.project.doctorService.RESTCalls.AppointmentClient;
+import com.project.doctorService.RESTCalls.PatientClient;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.AllArgsConstructor;
@@ -19,19 +20,45 @@ public class ExternalServiceClient {
     private static final Logger log = LoggerFactory.getLogger(ExternalServiceClient.class);
 
     private AppointmentClient appointmentClient;
+    private PatientClient patientClient;
 
-    @CircuitBreaker(name = "appointmentService", fallbackMethod = "cancelAppointmentFallback")
+    @CircuitBreaker(name = "appointmentService", fallbackMethod = "markCancelledFallback")
     @Retry(name = "appointmentService")
-    public AppointmentDto cancelAppointment(String appointmentId, String email, String role) {
-        log.info("action=FEIGN_REQUEST service=appointment-service endpoint=/cancelAppointment identifier={}", appointmentId);
-        AppointmentDto result = appointmentClient.cancelAppointmentAppointmentClient(appointmentId, email, role);
+    public void markCancelled(String appointmentId, String cancelledBy, String email, String role) {
+        log.info("action=FEIGN_REQUEST service=appointment-service endpoint=/markCancelled identifier={} cancelledBy={}", appointmentId, cancelledBy);
+        appointmentClient.markCancelled(appointmentId, cancelledBy, email, role);
         log.info("action=FEIGN_RESPONSE service=appointment-service status=SUCCESS identifier={}", appointmentId);
-        return result;
     }
 
-    private AppointmentDto cancelAppointmentFallback(String appointmentId, String email, String role, Exception e) {
+    private void markCancelledFallback(String appointmentId, String cancelledBy, String email, String role, Exception e) {
         log.error("action=FEIGN_RESPONSE service=appointment-service status=FAILED identifier={} reason=SERVICE_UNAVAILABLE error={}", appointmentId, e.getMessage());
-        throw new RuntimeException("Appointment service unavailable, unable to cancel appointment: " + e.getMessage());
+        throw new RuntimeException("Appointment service unavailable, unable to mark cancelled: " + e.getMessage());
+    }
+
+    @CircuitBreaker(name = "appointmentService", fallbackMethod = "restoreAppointmentFallback")
+    @Retry(name = "appointmentService")
+    public void restoreAppointment(String appointmentId, String email, String role) {
+        log.info("action=FEIGN_REQUEST service=appointment-service endpoint=/restoreAppointment identifier={}", appointmentId);
+        appointmentClient.restoreAppointment(appointmentId, email, role);
+        log.info("action=FEIGN_RESPONSE service=appointment-service status=SUCCESS identifier={}", appointmentId);
+    }
+
+    private void restoreAppointmentFallback(String appointmentId, String email, String role, Exception e) {
+        log.error("action=FEIGN_RESPONSE service=appointment-service status=FAILED identifier={} reason=SERVICE_UNAVAILABLE error={}", appointmentId, e.getMessage());
+        throw new RuntimeException("Appointment service unavailable, unable to restore appointment: " + e.getMessage());
+    }
+
+    @CircuitBreaker(name = "patientService", fallbackMethod = "removeAppointmentFromPatientFallback")
+    @Retry(name = "patientService")
+    public void removeAppointmentFromPatient(String appointmentId, String email, String role) {
+        log.info("action=FEIGN_REQUEST service=patient-service endpoint=/removeAppointment identifier={}", appointmentId);
+        patientClient.removeAppointmentFromPatient(appointmentId, email, role);
+        log.info("action=FEIGN_RESPONSE service=patient-service status=SUCCESS identifier={}", appointmentId);
+    }
+
+    private void removeAppointmentFromPatientFallback(String appointmentId, String email, String role, Exception e) {
+        log.error("action=FEIGN_RESPONSE service=patient-service status=FAILED identifier={} reason=SERVICE_UNAVAILABLE error={}", appointmentId, e.getMessage());
+        throw new RuntimeException("Patient service unavailable, unable to remove appointment: " + e.getMessage());
     }
 
     @CircuitBreaker(name = "appointmentService", fallbackMethod = "completeAppointmentFallback")

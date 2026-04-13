@@ -17,9 +17,9 @@ import java.util.UUID;
 
 @Service
 @AllArgsConstructor
-public class KafkaListenerNotification {
+public class KafkaListenerAdmin {
 
-    private static final Logger log = LoggerFactory.getLogger(KafkaListenerNotification.class);
+    private static final Logger log = LoggerFactory.getLogger(KafkaListenerAdmin.class);
 
     private AdminService adminService;
 

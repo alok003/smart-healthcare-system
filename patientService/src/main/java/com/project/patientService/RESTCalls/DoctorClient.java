@@ -3,11 +3,13 @@ package com.project.patientService.RESTCalls;
 import com.project.patientService.Model.AppointmentDto;
 import com.project.patientService.Model.DoctorDto;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -23,6 +25,14 @@ public interface DoctorClient {
     @GetMapping("/api/doctor-service/secure/getDoctorByEmail/{doctorEmail}")
     DoctorDto getDoctorByEmail(
             @PathVariable String doctorEmail,
+            @RequestHeader("X-User-Email") String email,
+            @RequestHeader("X-User-Role") String role
+    );
+
+    @DeleteMapping("/api/doctor-service/secure/removeAppointmentFromSchedule")
+    void removeAppointmentFromSchedule(
+            @RequestParam String appointmentId,
+            @RequestParam String date,
             @RequestHeader("X-User-Email") String email,
             @RequestHeader("X-User-Role") String role
     );

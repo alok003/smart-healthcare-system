@@ -56,6 +56,18 @@ management:
   endpoint:
     health:
       show-details: always
+  health:
+    mail:
+      enabled: false
   info:
     env:
       enabled: true
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+  info:
+    title: Notification Service API
+    description: Smart Healthcare System - Notification Service
+    version: 1.0.0

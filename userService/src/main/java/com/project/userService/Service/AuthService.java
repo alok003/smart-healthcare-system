@@ -61,18 +61,12 @@ public class AuthService {
         UserModel result = utilityFunction.cnvEntityToBean(save);
         result.setUserPassword(null);
         log.info("action=KAFKA_PUBLISH status=INITIATED topic=welcome-notification identifier={} payload={}", userModel.getUserEmail(), LogUtil.toJson(result));
-        try {
-            kafkaTemplate.send(MessageBuilder
-                    .withPayload(UtilityFunctions.cnvDtoToMap(result))
-                    .setHeader(KafkaHeaders.TOPIC, "welcome-notification")
-                    .setHeader("X-Correlation-ID", MDC.get("correlationId"))
-                    .build()).get();
-            log.info("action=KAFKA_PUBLISH status=SUCCESS topic=welcome-notification identifier={}", userModel.getUserEmail());
-        } catch (Exception e) {
-            log.error("action=KAFKA_PUBLISH status=FAILED topic=welcome-notification identifier={} reason=KAFKA_UNAVAILABLE detail=Registration rolled back error={}", userModel.getUserEmail(), e.getMessage());
-            userRepository.delete(save);
-            throw new RuntimeException("Registration failed due to notification service being unavailable. Please try again.");
-        }
+        kafkaTemplate.send(MessageBuilder
+                .withPayload(UtilityFunctions.cnvDtoToMap(result))
+                .setHeader(KafkaHeaders.TOPIC, "welcome-notification")
+                .setHeader("X-Correlation-ID", MDC.get("correlationId"))
+                .build());
+        log.info("action=KAFKA_PUBLISH status=SUCCESS topic=welcome-notification identifier={}", userModel.getUserEmail());
         log.info("action=USER_REGISTER status=SUCCESS identifier={} payload={}", userModel.getUserEmail(), LogUtil.toJson(result));
         return result;
     }

@@ -54,6 +54,14 @@ public class PatientController {
         return ResponseEntity.status(HttpStatus.OK).body(patientService.getDoctorAvailibility(email));
     }
 
+    @DeleteMapping("/removeAppointment/{appointmentId}")
+    public ResponseEntity<Void> removeAppointment(@RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role, @PathVariable String appointmentId) throws UnAuthorizedException {
+        log.info("action=REQUEST_RECEIVED method=DELETE path=/api/patient-service/secure/removeAppointment/{} requestedBy={} role={}", appointmentId, email, role);
+        if (!utilityFunctions.validateRequestAdmin(email, role)) throw new UnAuthorizedException();
+        patientService.removeAppointmentFromPatientByAppointmentId(appointmentId);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
     @DeleteMapping("/cancelAppointment/{id}")
     public ResponseEntity<AppointmentDto> cancelAppointment(@RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role, @PathVariable String id) throws UnAuthorizedException, PatientNotFoundException {
         log.info("action=REQUEST_RECEIVED method=DELETE path=/api/patient-service/secure/cancelAppointment/{} requestedBy={} role={}", id, email, role);

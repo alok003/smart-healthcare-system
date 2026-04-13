@@ -256,7 +256,7 @@ class UserControllerTest {
     }
 
     @Test
-    void requestAdminAccess_kafkaFailure_returns503() throws Exception {
+    void requestAdminAccess_kafkaDown_stillReturns202() throws Exception {
         when(kafkaTemplate.send(any(Message.class)))
                 .thenReturn(CompletableFuture.failedFuture(new RuntimeException("Kafka down")));
 
@@ -265,7 +265,8 @@ class UserControllerTest {
                         .header("X-User-Role", USER_ROLE)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new RequestRoleDto())))
-                .andExpect(status().isServiceUnavailable());
+                .andExpect(status().isAccepted())
+                .andExpect(content().string("Request for Admin access sent successfully"));
     }
 
     // --- requestDoctorAccess ---

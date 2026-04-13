@@ -1,7 +1,6 @@
 package com.project.adminService.Model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.project.adminService.Model.Specialization;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;

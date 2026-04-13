@@ -23,10 +23,6 @@ public class UtilityFunctions {
         return Objects.equals(role, "ADMIN") && validateEmail(email);
     }
 
-    public Boolean validateRequestAdminOrPatient(String email, String role) {
-        return (Objects.equals(role, "ADMIN") || Objects.equals(role, "PATIENT")) && validateEmail(email);
-    }
-
     public AppointmentDto cnvEntityToDto(Object entity) {
         AppointmentDto appointmentDto = new AppointmentDto();
         BeanUtils.copyProperties(entity, appointmentDto);

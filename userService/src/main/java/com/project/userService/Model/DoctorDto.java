@@ -19,5 +19,4 @@ public class DoctorDto {
     private String licenseNumber;
     private String contactNumber;
     private String overview;
-    private Bookings bookings;
 }

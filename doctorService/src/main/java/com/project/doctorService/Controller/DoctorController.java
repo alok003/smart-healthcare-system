@@ -71,6 +71,14 @@ public class DoctorController {
         return ResponseEntity.status(HttpStatus.OK).body(doctorService.getMyDetails(doctorEmail));
     }
 
+    @DeleteMapping("/removeAppointmentFromSchedule")
+    public ResponseEntity<Void> removeAppointmentFromSchedule(@RequestParam String appointmentId, @RequestParam String date, @RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException {
+        log.info("action=REQUEST_RECEIVED method=DELETE path=/api/doctor-service/secure/removeAppointmentFromSchedule requestedBy={} role={} identifier={}", email, role, appointmentId);
+        if (!utilityFunctions.validateRequestAdmin(email, role)) throw new UnAuthorizedException();
+        doctorService.removeAppointmentFromSchedule(appointmentId, email, date);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
     @PostMapping("/addDocAppointment")
     public ResponseEntity<Boolean> addDocAppointment(@RequestBody AppointmentDto appointmentDto, @RequestHeader("X-User-Email") String email, @RequestHeader("X-User-Role") String role) throws UnAuthorizedException, DoctorNotFoundException, DateOutOfRangeException {
         log.info("action=REQUEST_RECEIVED method=POST path=/api/doctor-service/secure/addDocAppointment requestedBy={} role={} identifier={}", email, role, appointmentDto.getId());

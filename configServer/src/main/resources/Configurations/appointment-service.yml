@@ -45,3 +45,12 @@ management:
   info:
     env:
       enabled: true
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+  info:
+    title: Appointment Service API
+    description: Smart Healthcare System - Appointment Service
+    version: 1.0.0

@@ -26,86 +26,50 @@
         <h1>🏥 Smart Healthcare System</h1>
         <p>Official Prescription Document</p>
     </div>
-
     <div class="section-title">Visit Information</div>
     <table>
-        <tr>
-            <td class="label">Appointment ID</td>
-            <td th:text="${id}">-</td>
-        </tr>
-        <tr>
-            <td class="label">Patient ID</td>
-            <td th:text="${patientId}">-</td>
-        </tr>
-        <tr>
-            <td class="label">Doctor ID</td>
-            <td th:text="${doctorId}">-</td>
-        </tr>
-        <tr>
-            <td class="label">Visit Date</td>
-            <td th:text="${date}">-</td>
-        </tr>
-        <tr>
-            <td class="label">Reason for Visit</td>
-            <td th:text="${subject}">-</td>
-        </tr>
-        <tr>
-            <td class="label">Notes</td>
-            <td th:text="${description}">-</td>
-        </tr>
-        <tr>
-            <td class="label">Status</td>
-            <td><span class="status" th:text="${status}">VISITED</span></td>
-        </tr>
+        <tr><td class="label">Appointment ID</td><td th:text="${id}">-</td></tr>
+        <tr><td class="label">Patient ID</td><td th:text="${patientId}">-</td></tr>
+        <tr><td class="label">Doctor ID</td><td th:text="${doctorId}">-</td></tr>
+        <tr><td class="label">Visit Date</td><td th:text="${date}">-</td></tr>
+        <tr><td class="label">Reason for Visit</td><td th:text="${subject}">-</td></tr>
+        <tr><td class="label">Notes</td><td th:text="${description}">-</td></tr>
+        <tr><td class="label">Status</td><td><span class="status" th:text="${status}">VISITED</span></td></tr>
     </table>
-
     <div th:if="${visitDetails != null and visitDetails.healthCheck != null}">
         <div class="section-title">Health Vitals Recorded During Visit</div>
         <table class="vitals-grid">
             <tr>
-                <td class="label">Height</td>
-                <td th:text="${visitDetails.healthCheck.height} + ' cm'">-</td>
-                <td class="label">Weight</td>
-                <td th:text="${visitDetails.healthCheck.weight} + ' kg'">-</td>
+                <td class="label">Height</td><td th:text="${visitDetails.healthCheck.height} + ' cm'">-</td>
+                <td class="label">Weight</td><td th:text="${visitDetails.healthCheck.weight} + ' kg'">-</td>
             </tr>
             <tr>
-                <td class="label">BMI</td>
-                <td th:text="${visitDetails.healthCheck.bmi}">-</td>
-                <td class="label">Body Temp</td>
-                <td th:text="${visitDetails.healthCheck.bodyTemperature} + ' °C'">-</td>
+                <td class="label">BMI</td><td th:text="${visitDetails.healthCheck.bmi}">-</td>
+                <td class="label">Body Temp</td><td th:text="${visitDetails.healthCheck.bodyTemperature} + ' °C'">-</td>
             </tr>
             <tr>
-                <td class="label">BP (Sys/Dia)</td>
-                <td th:text="${visitDetails.healthCheck.bpSys} + ' / ' + ${visitDetails.healthCheck.bpDia} + ' mmHg'">-</td>
-                <td class="label">Heart Rate</td>
-                <td th:text="${visitDetails.healthCheck.heartRate} + ' bpm'">-</td>
+                <td class="label">BP (Sys/Dia)</td><td th:text="${visitDetails.healthCheck.bpSys} + ' / ' + ${visitDetails.healthCheck.bpDia} + ' mmHg'">-</td>
+                <td class="label">Heart Rate</td><td th:text="${visitDetails.healthCheck.heartRate} + ' bpm'">-</td>
             </tr>
             <tr>
-                <td class="label">Oxygen Level</td>
-                <td th:text="${visitDetails.healthCheck.oxyLvl} + ' %'">-</td>
-                <td class="label">Blood Sugar</td>
-                <td th:text="${visitDetails.healthCheck.bloodSugar} + ' mg/dL'">-</td>
+                <td class="label">Oxygen Level</td><td th:text="${visitDetails.healthCheck.oxyLvl} + ' %'">-</td>
+                <td class="label">Blood Sugar</td><td th:text="${visitDetails.healthCheck.bloodSugar} + ' mg/dL'">-</td>
             </tr>
             <tr>
-                <td class="label">Respiratory Rate</td>
-                <td th:text="${visitDetails.healthCheck.respiratoryRate} + ' breaths/min'">-</td>
-                <td class="label"></td>
-                <td></td>
+                <td class="label">Respiratory Rate</td><td th:text="${visitDetails.healthCheck.respiratoryRate} + ' breaths/min'">-</td>
+                <td class="label"></td><td></td>
             </tr>
         </table>
     </div>
-
     <div th:if="${visitDetails != null and visitDetails.prescription != null}">
         <div class="section-title">💊 Prescription</div>
         <div class="prescription-box" th:text="${visitDetails.prescription}">-</div>
     </div>
-
     <div class="disclaimer">
-        ⚠️ This prescription is issued by Smart Healthcare System. Please follow the prescribed dosage. Consult your doctor before making any changes to your medication.
+        ⚠️ This prescription is issued by Smart Healthcare System. Please follow the prescribed dosage. Consult your doctor before making any changes.
     </div>
-
     <div class="footer">
-        <p>This is a system-generated document. &copy; 2026 Smart Healthcare System. All rights reserved.</p>
+        <p>System-generated document. &copy; 2026 Smart Healthcare System. All rights reserved.</p>
     </div>
 </body>
 </html>

@@ -5,13 +5,11 @@ services:
     container_name: mysql
     ports:
       - "3306:3306"
-    env_file:
-      - Vault.env
     environment:
-      MYSQL_ROOT_PASSWORD: ${DATABASE_PASS}
+      MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: userservice
-      MYSQL_USER: ${DATABASE_USERNAME}
-      MYSQL_PASSWORD: ${DATABASE_PASS}
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
     volumes:
       - mysql-data:/var/lib/mysql
     networks:

@@ -75,7 +75,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 40s
+      start_period: 120s
 
   eureka-server:
     build:
@@ -104,7 +104,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 40s
+      start_period: 120s
 
   gateway:
     build:

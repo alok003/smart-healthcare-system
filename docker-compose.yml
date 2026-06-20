@@ -8,8 +8,6 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: userservice
-      MYSQL_USER: root
-      MYSQL_PASSWORD: root
     volumes:
       - mysql-data:/var/lib/mysql
     networks:

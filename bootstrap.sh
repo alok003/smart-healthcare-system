@@ -54,8 +54,11 @@ $SSH << EOF
 
   echo "==> Installing Docker..."
   if ! command -v docker &> /dev/null; then
-    curl -fsSL https://get.docker.com -o get-docker.sh
-    sudo sh get-docker.sh
+    sudo apt-get install -y -qq curl apt-transport-https ca-certificates gnupg
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu focal stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    sudo apt-get update -qq
+    sudo apt-get install -y -qq docker-ce docker-ce-cli containerd.io docker-compose-plugin
     sudo usermod -aG docker $VM_USER
     sudo systemctl enable docker
     sudo systemctl start docker
@@ -72,17 +75,17 @@ $SSH << EOF
   sudo chown $VM_USER:$VM_USER /app
   git clone -b $BRANCH $REPO $APP_DIR
 
-  echo "==> Creating Vault.env..."
-  cat > $APP_DIR/Vault.env << VAULTEOF
+echo "==> Creating Vault.env..."
+$SSH "cat > $APP_DIR/Vault.env << 'VAULTEOF'
 DATABASE_USERNAME=$DB_USER
 DATABASE_PASS=$DB_PASS
 SECRET_KEY=$SECRET_KEY
 EXPIRATION=$EXPIRATION
 EMAIL_USERNAME=$EMAIL_USER
 EMAIL_PASSWORD=$EMAIL_PASS
-VAULTEOF
+VAULTEOF"
 
-  echo "==> Setting permissions..."
+echo "==> Setting permissions..."
   chmod +x $APP_DIR/build-all.sh
   find $APP_DIR -name "mvnw" -exec chmod +x {} \;
 

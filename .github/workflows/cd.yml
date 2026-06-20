@@ -1,0 +1,46 @@
+name: CD — Deploy to Server
+
+on:
+  push:
+    branches:
+      - AWS-BRANCH
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script_stop: true
+          script: |
+            APP_DIR="/app/smart-healthcare-system"
+
+            echo "==> Recreating Vault.env..."
+            cat > $APP_DIR/Vault.env << VAULTEOF
+DATABASE_USERNAME=${{ secrets.DATABASE_USERNAME }}
+DATABASE_PASS=${{ secrets.DATABASE_PASS }}
+SECRET_KEY=${{ secrets.SECRET_KEY }}
+EXPIRATION=${{ secrets.EXPIRATION }}
+EMAIL_USERNAME=${{ secrets.EMAIL_USERNAME }}
+EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}
+VAULTEOF
+
+            echo "==> Pulling latest code..."
+            cd $APP_DIR
+            git pull origin AWS-BRANCH
+
+            echo "==> Building all services..."
+            chmod +x build-all.sh
+            find . -name "mvnw" -exec chmod +x {} \;
+            ./build-all.sh
+
+            echo "==> Restarting all containers..."
+            docker compose down
+            docker compose up -d
+
+            echo "==> Done. All services redeployed."

@@ -73,17 +73,24 @@ $SSH << EOF
   echo "==> Cloning repo..."
   sudo mkdir -p /app
   sudo chown $VM_USER:$VM_USER /app
-  git clone -b $BRANCH $REPO $APP_DIR
+  if [ -d "$APP_DIR/.git" ]; then
+    echo "Repo exists, pulling latest..."
+    cd $APP_DIR
+    git pull origin $BRANCH
+  else
+    sudo rm -rf $APP_DIR
+    git clone -b $BRANCH $REPO $APP_DIR
+  fi
 
-echo "==> Creating Vault.env..."
-$SSH "cat > $APP_DIR/Vault.env << 'VAULTEOF'
+  echo "==> Creating Vault.env..."
+  cat > $APP_DIR/Vault.env << VAULTEOF
 DATABASE_USERNAME=$DB_USER
 DATABASE_PASS=$DB_PASS
 SECRET_KEY=$SECRET_KEY
 EXPIRATION=$EXPIRATION
 EMAIL_USERNAME=$EMAIL_USER
 EMAIL_PASSWORD=$EMAIL_PASS
-VAULTEOF"
+VAULTEOF
 
 echo "==> Setting permissions..."
   chmod +x $APP_DIR/build-all.sh

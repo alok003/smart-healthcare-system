@@ -195,7 +195,7 @@ RemainAfterExit=yes
 WorkingDirectory=$APP_DIR
 ExecStart=/usr/bin/docker compose up -d
 ExecStop=/usr/bin/docker compose down
-TimeoutStartSec=300
+TimeoutStartSec=600
 User=$VM_USER
 
 [Install]

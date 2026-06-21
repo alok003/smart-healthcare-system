@@ -21,7 +21,6 @@ jobs:
           CHANGED=$(git diff --name-only HEAD~1 HEAD)
           echo "Changed files: $CHANGED"
 
-          # docker-compose.yml changed → restart all, no build
           if echo "$CHANGED" | grep -q "^docker-compose.yml"; then
             echo "type=compose" >> $GITHUB_OUTPUT
             echo "services=" >> $GITHUB_OUTPUT
@@ -67,14 +66,7 @@ jobs:
             APP_DIR="/app/smart-healthcare-system"
 
             echo "==> Recreating Vault.env..."
-            cat > $APP_DIR/Vault.env << VAULTEOF
-DATABASE_USERNAME=${{ secrets.DATABASE_USERNAME }}
-DATABASE_PASS=${{ secrets.DATABASE_PASS }}
-SECRET_KEY=${{ secrets.SECRET_KEY }}
-EXPIRATION=${{ secrets.EXPIRATION }}
-EMAIL_USERNAME=${{ secrets.EMAIL_USERNAME }}
-EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}
-VAULTEOF
+            printf "DATABASE_USERNAME=${{ secrets.DATABASE_USERNAME }}\nDATABASE_PASS=${{ secrets.DATABASE_PASS }}\nSECRET_KEY=${{ secrets.SECRET_KEY }}\nEXPIRATION=${{ secrets.EXPIRATION }}\nEMAIL_USERNAME=${{ secrets.EMAIL_USERNAME }}\nEMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}\n" > $APP_DIR/Vault.env
 
             echo "==> Pulling latest code..."
             cd $APP_DIR
@@ -98,14 +90,7 @@ VAULTEOF
             SERVICES="${{ steps.changes.outputs.services }}"
 
             echo "==> Recreating Vault.env..."
-            cat > $APP_DIR/Vault.env << VAULTEOF
-DATABASE_USERNAME=${{ secrets.DATABASE_USERNAME }}
-DATABASE_PASS=${{ secrets.DATABASE_PASS }}
-SECRET_KEY=${{ secrets.SECRET_KEY }}
-EXPIRATION=${{ secrets.EXPIRATION }}
-EMAIL_USERNAME=${{ secrets.EMAIL_USERNAME }}
-EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}
-VAULTEOF
+            printf "DATABASE_USERNAME=${{ secrets.DATABASE_USERNAME }}\nDATABASE_PASS=${{ secrets.DATABASE_PASS }}\nSECRET_KEY=${{ secrets.SECRET_KEY }}\nEXPIRATION=${{ secrets.EXPIRATION }}\nEMAIL_USERNAME=${{ secrets.EMAIL_USERNAME }}\nEMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}\n" > $APP_DIR/Vault.env
 
             echo "==> Pulling latest code..."
             cd $APP_DIR

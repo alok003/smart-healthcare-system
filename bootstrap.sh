@@ -181,9 +181,35 @@ VAULTEOF
   # ── 4. SYSTEMD ────────────────────────────────────────────────
 
   log_info "--- SECTION 4: Systemd ---"
-  if [ ! -f /etc/systemd/system/smart-healthcare.service ]; then
-    log_info "Creating systemd service..."
-    sudo tee /etc/systemd/system/smart-healthcare.service > /dev/null << SERVICEEOF
+
+  log_info "Creating start.sh..."
+  cat > $APP_DIR/start.sh << 'STARTEOF'
+#!/bin/bash
+APP_DIR="/app/smart-healthcare-system"
+cd $APP_DIR
+
+echo "[$(date)] Starting all containers..."
+/usr/bin/docker compose up -d
+
+echo "[$(date)] Waiting for Eureka to be healthy..."
+until curl -sf http://localhost:8761/actuator/health | grep -q "UP"; do
+  echo "[$(date)] Eureka not ready, waiting 10s..."
+  sleep 10
+done
+
+echo "[$(date)] Eureka UP - restarting business services..."
+/usr/bin/docker compose restart \
+  user-service admin-service doctor-service \
+  patient-service appointment-service \
+  notification-service gateway
+
+echo "[$(date)] System ready."
+STARTEOF
+  chmod +x $APP_DIR/start.sh
+  log_done "start.sh created"
+
+  log_info "Creating/updating systemd service..."
+  sudo tee /etc/systemd/system/smart-healthcare.service > /dev/null << SERVICEEOF
 [Unit]
 Description=Smart Healthcare System
 After=docker.service
@@ -193,7 +219,7 @@ Requires=docker.service
 Type=oneshot
 RemainAfterExit=yes
 WorkingDirectory=$APP_DIR
-ExecStart=/usr/bin/docker compose up -d
+ExecStart=$APP_DIR/start.sh
 ExecStop=/usr/bin/docker compose down
 TimeoutStartSec=600
 User=$VM_USER
@@ -201,12 +227,12 @@ User=$VM_USER
 [Install]
 WantedBy=multi-user.target
 SERVICEEOF
+  sudo systemctl daemon-reload >> \$FULL_LOG 2>&1
+  sudo systemctl enable smart-healthcare.service >> \$FULL_LOG 2>&1
+  log_done "Systemd service created and enabled"
     sudo systemctl daemon-reload >> \$FULL_LOG 2>&1
     sudo systemctl enable smart-healthcare.service >> \$FULL_LOG 2>&1
     log_done "Systemd service created and enabled"
-  else
-    log_skip "Systemd service already exists"
-  fi
 
   # ── 5. CLEANUP ────────────────────────────────────────────────
 

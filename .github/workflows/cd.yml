@@ -10,7 +10,53 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy to server
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Detect changed services
+        id: changes
+        run: |
+          CHANGED=$(git diff --name-only HEAD~1 HEAD)
+          echo "Changed files: $CHANGED"
+
+          # docker-compose.yml changed → restart all, no build
+          if echo "$CHANGED" | grep -q "^docker-compose.yml"; then
+            echo "type=compose" >> $GITHUB_OUTPUT
+            echo "services=" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          SERVICES=""
+          if echo "$CHANGED" | grep -q "^userService/";         then SERVICES="$SERVICES user-service:userService"; fi
+          if echo "$CHANGED" | grep -q "^adminService/";        then SERVICES="$SERVICES admin-service:adminService"; fi
+          if echo "$CHANGED" | grep -q "^doctorService/";       then SERVICES="$SERVICES doctor-service:doctorService"; fi
+          if echo "$CHANGED" | grep -q "^patientService/";      then SERVICES="$SERVICES patient-service:patientService"; fi
+          if echo "$CHANGED" | grep -q "^appointmentService/";  then SERVICES="$SERVICES appointment-service:appointmentService"; fi
+          if echo "$CHANGED" | grep -q "^notificationService/"; then SERVICES="$SERVICES notification-service:notificationService"; fi
+          if echo "$CHANGED" | grep -q "^gateway/";             then SERVICES="$SERVICES gateway:gateway"; fi
+          if echo "$CHANGED" | grep -q "^configServer/";        then SERVICES="$SERVICES config-server:configServer"; fi
+          if echo "$CHANGED" | grep -q "^eurekaServer/";        then SERVICES="$SERVICES eureka-server:eurekaServer"; fi
+
+          SERVICES=$(echo $SERVICES | xargs)
+
+          if [ -z "$SERVICES" ]; then
+            echo "type=none" >> $GITHUB_OUTPUT
+            echo "services=" >> $GITHUB_OUTPUT
+          else
+            echo "type=services" >> $GITHUB_OUTPUT
+            echo "services=$SERVICES" >> $GITHUB_OUTPUT
+          fi
+
+          echo "Detected: $SERVICES"
+
+      - name: Deploy — skip
+        if: steps.changes.outputs.type == 'none'
+        run: echo "No relevant changes detected, skipping deploy."
+
+      - name: Deploy — docker-compose changed
+        if: steps.changes.outputs.type == 'compose'
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -34,13 +80,45 @@ VAULTEOF
             cd $APP_DIR
             git pull origin AWS-BRANCH
 
-            echo "==> Building all services..."
-            chmod +x build-all.sh
-            find . -name "mvnw" -exec chmod +x {} \;
-            ./build-all.sh
+            echo "==> docker-compose.yml changed — restarting all..."
+            sudo docker compose down
+            sudo docker compose up -d
+            echo "==> All services restarted."
 
-            echo "==> Restarting all containers..."
-            docker compose down
-            docker compose up -d
+      - name: Deploy — service code changed
+        if: steps.changes.outputs.type == 'services'
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script_stop: true
+          script: |
+            APP_DIR="/app/smart-healthcare-system"
+            SERVICES="${{ steps.changes.outputs.services }}"
 
-            echo "==> Done. All services redeployed."
+            echo "==> Recreating Vault.env..."
+            cat > $APP_DIR/Vault.env << VAULTEOF
+DATABASE_USERNAME=${{ secrets.DATABASE_USERNAME }}
+DATABASE_PASS=${{ secrets.DATABASE_PASS }}
+SECRET_KEY=${{ secrets.SECRET_KEY }}
+EXPIRATION=${{ secrets.EXPIRATION }}
+EMAIL_USERNAME=${{ secrets.EMAIL_USERNAME }}
+EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}
+VAULTEOF
+
+            echo "==> Pulling latest code..."
+            cd $APP_DIR
+            git pull origin AWS-BRANCH
+
+            echo "==> Building and restarting changed services: $SERVICES"
+            for ENTRY in $SERVICES; do
+              SERVICE=$(echo $ENTRY | cut -d: -f1)
+              DIR=$(echo $ENTRY | cut -d: -f2)
+              echo "==> Building $SERVICE..."
+              cd $APP_DIR/$DIR
+              ./mvnw clean package -DskipTests -q
+              cd $APP_DIR
+              sudo docker compose up -d --build $SERVICE
+              echo "==> $SERVICE redeployed."
+            done

@@ -47,6 +47,10 @@ $SSH << EOF
   FULL_LOG="/tmp/bootstrap-logs/bootstrap.log"
   INFO_LOG="/tmp/bootstrap-logs/bootstrap-info.log"
 
+  # Fresh logs every run
+  > \$FULL_LOG
+  > \$INFO_LOG
+
   # Helpers
   log_info() {
     TS=\$(date '+%Y-%m-%d %H:%M:%S')
@@ -155,8 +159,9 @@ $SSH << EOF
   # Move logs to app dir now that it exists
   mkdir -p $APP_DIR/logs
   sudo chown -R $VM_USER:$VM_USER $APP_DIR/logs
-  cp \$FULL_LOG $APP_DIR/logs/bootstrap.log 2>/dev/null || true
-  cp \$INFO_LOG $APP_DIR/logs/bootstrap-info.log 2>/dev/null || true
+  # Start fresh in app dir
+  cp \$FULL_LOG $APP_DIR/logs/bootstrap.log
+  cp \$INFO_LOG $APP_DIR/logs/bootstrap-info.log
   FULL_LOG="$APP_DIR/logs/bootstrap.log"
   INFO_LOG="$APP_DIR/logs/bootstrap-info.log"
 
@@ -239,34 +244,55 @@ SERVICEEOF
     cd $APP_DIR
   }
 
+  jar_exists() {
+    DIR=\$1
+    ls $APP_DIR/\$DIR/target/*.jar > /dev/null 2>&1
+  }
+
+  should_build() {
+    SERVICE=\$1
+    DIR=\$2
+    CHANGED=\$3
+    if echo "\$CHANGED" | grep -q "^\$DIR/"; then
+      log_info "\$SERVICE — code changed, will build"
+      return 0
+    elif ! jar_exists \$DIR; then
+      log_info "\$SERVICE — no JAR found, will build"
+      return 0
+    else
+      log_skip "\$SERVICE — no changes + JAR exists, skipping"
+      return 1
+    fi
+  }
+
   if [ "\$FRESH_CLONE" = "true" ]; then
     log_info "Fresh clone — building all 9 services..."
-    build_service "config-server"   "configServer"
-    build_service "eureka-server"   "eurekaServer"
-    build_service "gateway"         "gateway"
-    build_service "user-service"    "userService"
-    build_service "admin-service"   "adminService"
-    build_service "doctor-service"  "doctorService"
-    build_service "patient-service" "patientService"
+    build_service "config-server"       "configServer"
+    build_service "eureka-server"       "eurekaServer"
+    build_service "gateway"             "gateway"
+    build_service "user-service"        "userService"
+    build_service "admin-service"       "adminService"
+    build_service "doctor-service"      "doctorService"
+    build_service "patient-service"     "patientService"
     build_service "appointment-service" "appointmentService"
     build_service "notification-service" "notificationService"
     log_done "All 9 services built"
   else
-    log_info "Checking which services changed..."
+    log_info "Checking which services need building..."
     BUILT=0
 
-    if echo "\$CHANGED_FILES" | grep -q "^userService/";         then build_service "user-service"         "userService";        BUILT=1; fi
-    if echo "\$CHANGED_FILES" | grep -q "^adminService/";        then build_service "admin-service"        "adminService";       BUILT=1; fi
-    if echo "\$CHANGED_FILES" | grep -q "^doctorService/";       then build_service "doctor-service"       "doctorService";      BUILT=1; fi
-    if echo "\$CHANGED_FILES" | grep -q "^patientService/";      then build_service "patient-service"      "patientService";     BUILT=1; fi
-    if echo "\$CHANGED_FILES" | grep -q "^appointmentService/";  then build_service "appointment-service"  "appointmentService"; BUILT=1; fi
-    if echo "\$CHANGED_FILES" | grep -q "^notificationService/"; then build_service "notification-service" "notificationService";BUILT=1; fi
-    if echo "\$CHANGED_FILES" | grep -q "^gateway/";             then build_service "gateway"              "gateway";            BUILT=1; fi
-    if echo "\$CHANGED_FILES" | grep -q "^configServer/";        then build_service "config-server"        "configServer";       BUILT=1; fi
-    if echo "\$CHANGED_FILES" | grep -q "^eurekaServer/";        then build_service "eureka-server"        "eurekaServer";       BUILT=1; fi
+    should_build "config-server"        "configServer"        "\$CHANGED_FILES" && { build_service "config-server"        "configServer";        BUILT=1; } || true
+    should_build "eureka-server"        "eurekaServer"        "\$CHANGED_FILES" && { build_service "eureka-server"        "eurekaServer";        BUILT=1; } || true
+    should_build "gateway"              "gateway"             "\$CHANGED_FILES" && { build_service "gateway"              "gateway";             BUILT=1; } || true
+    should_build "user-service"         "userService"         "\$CHANGED_FILES" && { build_service "user-service"         "userService";         BUILT=1; } || true
+    should_build "admin-service"        "adminService"        "\$CHANGED_FILES" && { build_service "admin-service"        "adminService";        BUILT=1; } || true
+    should_build "doctor-service"       "doctorService"       "\$CHANGED_FILES" && { build_service "doctor-service"       "doctorService";       BUILT=1; } || true
+    should_build "patient-service"      "patientService"      "\$CHANGED_FILES" && { build_service "patient-service"      "patientService";      BUILT=1; } || true
+    should_build "appointment-service"  "appointmentService"  "\$CHANGED_FILES" && { build_service "appointment-service"  "appointmentService";  BUILT=1; } || true
+    should_build "notification-service" "notificationService" "\$CHANGED_FILES" && { build_service "notification-service" "notificationService"; BUILT=1; } || true
 
     if [ "\$BUILT" = "0" ]; then
-      log_skip "No service code changed — skipping build"
+      log_skip "All JARs exist and no code changed — skipping all builds"
     fi
   fi
 

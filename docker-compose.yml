@@ -20,7 +20,7 @@ services:
           memory: 256M
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DATABASE_PASS}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -70,10 +70,10 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8888/actuator/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 120s
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 180s
 
   eureka-server:
     build:
@@ -99,10 +99,10 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8761/actuator/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 120s
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 180s
 
   gateway:
     build:

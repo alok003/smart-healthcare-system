@@ -154,6 +154,7 @@ $SSH << EOF
 
   # Move logs to app dir now that it exists
   mkdir -p $APP_DIR/logs
+  sudo chown -R $VM_USER:$VM_USER $APP_DIR/logs
   cp \$FULL_LOG $APP_DIR/logs/bootstrap.log 2>/dev/null || true
   cp \$INFO_LOG $APP_DIR/logs/bootstrap-info.log 2>/dev/null || true
   FULL_LOG="$APP_DIR/logs/bootstrap.log"

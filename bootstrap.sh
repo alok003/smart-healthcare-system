@@ -153,24 +153,24 @@ VAULTEOF
   cat > $APP_DIR/start.sh << 'STARTEOF'
 #!/bin/bash
 APP_DIR="/app/smart-healthcare-system"
-cd $APP_DIR
+cd \$APP_DIR
 
-log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"; }
+log() { echo "[\$(date '+%Y-%m-%d %H:%M:%S')] \$1"; }
 
 wait_for() {
-  NAME=$1
-  URL=$2
-  MAX=$3
-  log "Waiting for $NAME..."
-  for i in $(seq 1 $MAX); do
-    if curl -sf $URL | grep -q "UP"; then
-      log "$NAME is UP"
+  NAME=\$1
+  URL=\$2
+  MAX=\$3
+  log "Waiting for \$NAME..."
+  for i in \$(seq 1 \$MAX); do
+    if curl -sf \$URL | grep -q "UP"; then
+      log "\$NAME is UP"
       return 0
     fi
-    log "$NAME not ready ($i/$MAX), retrying in 10s..."
+    log "\$NAME not ready (\$i/\$MAX), retrying in 10s..."
     sleep 10
   done
-  log "WARNING: $NAME did not become healthy after $MAX attempts, continuing..."
+  log "WARNING: \$NAME did not become healthy after \$MAX attempts, continuing..."
 }
 
 log "--- STEP 1: Infrastructure (mysql, mongodb, zookeeper, kafka) ---"

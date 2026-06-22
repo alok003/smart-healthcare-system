@@ -188,22 +188,61 @@ VAULTEOF
 APP_DIR="/app/smart-healthcare-system"
 cd $APP_DIR
 
-echo "[$(date)] Starting all containers..."
-/usr/bin/docker compose up -d
+log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"; }
 
-echo "[$(date)] Waiting for Eureka to be healthy..."
-until curl -sf http://localhost:8761/actuator/health | grep -q "UP"; do
-  echo "[$(date)] Eureka not ready, waiting 10s..."
-  sleep 10
-done
+wait_for() {
+  NAME=$1
+  URL=$2
+  MAX=$3
+  log "Waiting for $NAME..."
+  for i in $(seq 1 $MAX); do
+    if curl -sf $URL | grep -q "UP"; then
+      log "$NAME is UP ✓"
+      return 0
+    fi
+    log "$NAME not ready ($i/$MAX), retrying in 10s..."
+    sleep 10
+  done
+  log "WARNING: $NAME did not become healthy after $MAX attempts, continuing anyway..."
+}
 
-echo "[$(date)] Eureka UP - restarting business services..."
-/usr/bin/docker compose restart \
-  user-service admin-service doctor-service \
-  patient-service appointment-service \
-  notification-service gateway
+# ── STEP 1: Infrastructure ──────────────────────────
+log "--- STEP 1: Starting infrastructure services ---"
+/usr/bin/docker compose up -d mysql mongodb zookeeper kafka
+log "Waiting 20s for infrastructure to initialize..."
+sleep 20
 
-echo "[$(date)] System ready."
+# ── STEP 2: Config Server ───────────────────────────
+log "--- STEP 2: Starting config-server ---"
+/usr/bin/docker compose up -d config-server
+wait_for "config-server" "http://localhost:8888/actuator/health" 30
+
+# ── STEP 3: Eureka ──────────────────────────────────
+log "--- STEP 3: Starting eureka-server ---"
+/usr/bin/docker compose up -d eureka-server
+wait_for "eureka-server" "http://localhost:8761/actuator/health" 30
+
+# ── STEP 4: Business Services ───────────────────────
+log "--- STEP 4: Starting gateway and business services ---"
+/usr/bin/docker compose up -d \
+  gateway \
+  user-service \
+  admin-service \
+  doctor-service \
+  patient-service \
+  appointment-service \
+  notification-service
+log "Business services started — they will register with Eureka shortly"
+
+# ── STEP 5: Kafka UI ────────────────────────────────
+log "--- STEP 5: Starting kafka-ui ---"
+/usr/bin/docker compose up -d kafka-ui
+
+log "======================================"
+log "All services started successfully!"
+log "Eureka:      http://localhost:8761"
+log "Gateway:     http://localhost:8080/actuator/health"
+log "======================================"
 STARTEOF
   chmod +x $APP_DIR/start.sh
   log_done "start.sh created"

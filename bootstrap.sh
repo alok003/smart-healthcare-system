@@ -197,16 +197,14 @@ log "--- STEP 4: Gateway + Business Services ---"
   patient-service appointment-service notification-service
 log "Business services started - registering with Eureka..."
 
-log "--- STEP 5: UI Tools ---"
-/usr/bin/docker compose up -d kafka-ui mongo-express adminer
+log "--- STEP 5: Kafka UI ---"
+/usr/bin/docker compose up -d kafka-ui
 
 log "========================================"
 log "All services started!"
-log "Eureka:        http://localhost:8761"
-log "Gateway:       http://localhost:8080/actuator/health"
-log "Kafka UI:      http://localhost:9090"
-log "Mongo Express: http://localhost:8081"
-log "Adminer:       http://localhost:8082"
+log "Eureka:  http://localhost:8761"
+log "Gateway: http://localhost:8080/actuator/health"
+log "Kafka UI: http://localhost:9090"
 log "========================================"
 STARTEOF
   chmod +x $APP_DIR/start.sh

@@ -418,15 +418,13 @@ services:
           memory: 64M
     restart: unless-stopped
 
-  phpmyadmin:
-    image: phpmyadmin:latest
-    container_name: phpmyadmin
+  adminer:
+    image: adminer:latest
+    container_name: adminer
     ports:
-      - "8082:80"
+      - "8082:8080"
     environment:
-      PMA_HOST: mysql
-      PMA_USER: root
-      PMA_PASSWORD: root
+      ADMINER_DEFAULT_SERVER: mysql
     depends_on:
       mysql:
         condition: service_healthy
@@ -435,9 +433,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 128M
-        reservations:
           memory: 64M
+        reservations:
+          memory: 32M
     restart: unless-stopped
 
 networks:

@@ -108,9 +108,13 @@ $SSH << EOF
 
   if [ ! -d "$APP_DIR/.git" ]; then
     log_info "No repo found — fresh clone..."
-    git clone -b $BRANCH $REPO $APP_DIR >> \$FULL_LOG 2>&1
-    FRESH_CLONE=true
-    log_done "Repo cloned successfully"
+    if git clone -b $BRANCH $REPO $APP_DIR 2>&1 | tee -a \$FULL_LOG \$INFO_LOG; then
+      FRESH_CLONE=true
+      log_done "Repo cloned successfully"
+    else
+      log_error "Git clone FAILED — check network or repo URL: $REPO"
+      exit 1
+    fi
   else
     log_info "Repo exists — pulling latest..."
     cd $APP_DIR

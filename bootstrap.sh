@@ -101,13 +101,14 @@ $SSH << EOF
   log_info "--- SECTION 2: Repository ---"
 
   sudo mkdir -p /app
-  sudo chown $VM_USER:$VM_USER /app
+  sudo chown -R $VM_USER:$VM_USER /app
 
   FRESH_CLONE=false
   CHANGED_FILES=""
 
   if [ ! -d "$APP_DIR/.git" ]; then
-    log_info "No repo found — fresh clone..."
+    log_info "No repo found — clearing and fresh clone..."
+    sudo rm -rf $APP_DIR
     if git clone -b $BRANCH $REPO $APP_DIR 2>&1 | tee -a \$FULL_LOG \$INFO_LOG; then
       FRESH_CLONE=true
       log_done "Repo cloned successfully"
